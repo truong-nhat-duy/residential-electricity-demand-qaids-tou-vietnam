@@ -1,0 +1,28 @@
+# Microdata and licensed/third-party data are never committed
+*.dta
+*.sav
+*.rds
+*.xlsx
+*.xls
+*.csv
+*.parquet
+*.rar
+*.zip
+*.7z
+# LaTeX / editor artefacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.lof
+*.lot
+*.toc
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex*
+*.run.xml
+~$*
+*.tmp
+.Rhistory
+.DS_Store

@@ -1,0 +1,243 @@
+%=====================================================================
+% FINAL Q1 JOURNAL-READY PAPER: Electricity Demand QAIDS + TOU Vietnam
+% Author: Truong Nhat Duy (UEH & Fulbright Vietnam)
+% Date: November 07, 2025
+%=====================================================================
+
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{siunitx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{pdflscape}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage{ifthen} % <== để điều kiện kiểm tra file ảnh
+
+\onehalfspacing
+\geometry{margin=1in}
+\bibpunct{(}{)}{;}{a}{}{,}
+
+% Custom formatting
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\bfseries}{\thesubsection}{1em}{}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsecfont}{\bfseries}
+
+% Header
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\thepage}
+\lhead{\textit{Electricity Demand with QAIDS and TOU}}
+
+\title{\textbf{Estimating Residential Electricity Demand in Vietnam Using QAIDS with Time-of-Use Pricing: Evidence from VHLSS 2022 and Policy Simulations for 2025--2030}}
+
+\author{
+	\textbf{Truong Nhat Duy}\thanks{Email: duy.truongnhat@ueh.edu.vn} \\[0.3em]
+	\small MSc Candidate, Development Economics, University of Economics Ho Chi Minh City (UEH) \\[-0.2em]
+	\small Master of Phaublic Policy, Fulbright School of Public Policy and Management \\[-0.2em]
+	\small Ho Chi Minh City, Vietnam
+}
+\date{November 07, 2025}
+
+\begin{document}
+	
+	\maketitle
+	
+	%=====================================================================
+	% TABLE OF CONTENTS
+	%=====================================================================
+	\tableofcontents
+	\newpage
+	
+	%=====================================================================
+	% ABSTRACT
+	%=====================================================================
+	\begin{abstract}
+		\noindent This study estimates Vietnam's residential electricity demand using the \textbf{Quadratic Almost Ideal Demand System (QAIDS)} augmented with \textbf{Time-of-Use (TOU) pricing} and temperature controls, based on the \textbf{Vietnam Household Living Standards Survey (VHLSS) 2022} ($N=9{,}383$). Results show a \textbf{price elasticity of $-0.62$}, \textbf{income elasticity of $0.38$} (rising to $0.50$ among the richest quintile), and a \textbf{TOU-urban interaction of $+0.18$}. A 10\% peak price increase causes a \textbf{Compensating Variation (CV) loss of VND 58,000/household/month}, with the poorest quintile bearing 2.1 times the relative burden. Dynamic simulations for 2025--2030 project \textbf{12--25\% peak reduction} and \textbf{10 million tons CO$_2$ savings} under full TOU + solar integration. The findings provide the first nationally representative evidence for Vietnam's TOU rollout and net-zero transition.
+	\end{abstract}
+	
+	%=====================================================================
+	% 1. INTRODUCTION
+	%=====================================================================
+	\section{Introduction}
+	Vietnam's electricity demand grew 10\% annually from 2015--2022 \citep{gso2024}, with residential consumption accounting for 52\% of total load. The government introduced a 4.8\% tariff increase in 2025 (Decision 599/QD-EVN) and TOU pilots in Hanoi and Ho Chi Minh City \citep{evn2025}. However, tiered pricing induces endogeneity, and no study has jointly estimated demand systems with TOU and climate controls.
+	
+	This paper addresses three questions:
+	\begin{enumerate}
+		\item How do price, income, and TOU affect electricity expenditure shares?
+		\item How do elasticities vary by income, region, and temperature?
+		\item What are the welfare and environmental impacts of nationwide TOU?
+	\end{enumerate}
+	
+	\textbf{Contributions}: (1) First QAIDS with TOU and temperature on VHLSS 2022; (2) CV/EV welfare analysis; (3) Dynamic policy simulation 2025--2030.
+	
+	%=====================================================================
+	% 2. LITERATURE REVIEW
+	%=====================================================================
+	\section{Literature Review}
+	
+	\subsection{Theoretical Framework}
+	Consumer behavior follows utility maximization \citep{varian1992}:
+	\[
+	\max_u u(x) \quad \text{s.t.} \quad p'x = m
+	\]
+	QAIDS \citep{banks1997} allows non-linear Engel curves:
+	\[
+	w_i = \alpha_i + \sum \gamma_{ij} \ln p_j + \beta_i \ln\left(\frac{x}{P}\right) + \frac{\lambda_i}{b(P)} \left[\ln\left(\frac{x}{P}\right)\right]^2
+	\]
+	
+	\subsection{Empirical Evidence}
+	Table \ref{tab:lit_review} summarizes key Q1 studies.
+	
+	\begin{table}[H]
+		\centering
+		\caption{Empirical Studies on Electricity Demand and TOU}
+		\label{tab:lit_review}
+		\resizebox{\textwidth}{!}{
+			\begin{tabular}{llccc>{\raggedright\arraybackslash}p{5cm}}
+				\toprule
+				Study & Model & Price Elasticity & TOU Effect & Context \\
+				\midrule
+				Balarama et al. (2020) & 2SLS & -0.45 & -- & Bangladesh \\
+				Lê (2020) & 2SLS & -0.4 to -0.6 & -- & Vietnam (VHLSS 2016) \\
+				Faruqui \& Sergici (2010) & Meta & -- & -10\% to -15\% & US experiments \\
+				Ito (2014) & RDD & -0.15 & -- & California \\
+				Jessoe \& Rapson (2014) & RCT & -- & -13\% & Smart meters \\
+				Labandeira et al. (2017) & AIDS & -0.3 to -0.7 & -- & Spain \\
+				Krishnamurthy \& Kriström (2015) & QAIDS & -0.5 & -- & 11 OECD \\
+				Filippini \& Pachauri (2016) & 2SLS & -0.68 & -- & India \\
+				Wang \& Mogi (2017) & QAIDS & -0.55 & -- & China \\
+				Burke \& Abay (2021) & IV & -0.61 & -- & US states \\
+				\textbf{This study} & \textbf{QAIDS+TOU} & \textbf{-0.62} & \textbf{+0.31} & \textbf{Vietnam 2022} \\
+				\bottomrule
+		\end{tabular}}
+	\end{table}
+	
+	%=====================================================================
+	% 3. DATA
+	%=====================================================================
+	\section{Data}
+	We use \textbf{VHLSS 2022} \citep{worldbank2023} ($N=9,383$). Key variables include electricity (\texttt{M4B111\_C2}, \texttt{M4B111\_C5}), income, and demographics. TOU prices are from \citep{evn2025}, and climate data from World Bank Climate Portal.
+	
+	%=====================================================================
+	% 4. METHODOLOGY
+	%=====================================================================
+	\section{Methodology}
+	\subsection{2SLS Demand}
+	\[
+	\ln(elec_i) = \beta_0 + \beta_1 \ln(p_i) + \beta_2 \ln(income_i) + \gamma X_i + \epsilon_i
+	\]
+	
+	\subsection{QAIDS with Heterogeneity}
+	\[
+	w_{elec} = \alpha_0 + \gamma \ln p_{elec} + \beta \ln\left(\frac{x}{P}\right) + \lambda \left[\ln\left(\frac{x}{P}\right)\right]^2 + \delta_1 tou\_ratio + \delta_2 (tou\_ratio \times urban) + \theta temp + \epsilon
+	\]
+	
+	%=====================================================================
+	% 5. RESULTS
+	%=====================================================================
+	\section{Results}
+	\begin{table}[H]
+		\centering
+		\caption{Estimation Results}
+		\label{tab:results}
+		\begin{tabular}{lcc}
+			\toprule
+			Variable & 2SLS & QAIDS \\
+			\midrule
+			$\ln(p_{elec})$ & \textbf{-0.62}$^{***}$ & \textbf{-0.62}$^{***}$ \\
+			$\ln(x/P)$ & 0.42$^{***}$ & 0.38$^{***}$ \\
+			$[\ln(x/P)]^2$ & -- & \textbf{0.12}$^{***}$ \\
+			$tou\_ratio$ & -- & \textbf{+0.31}$^{***}$ \\
+			$tou\_ratio \times urban$ & -- & \textbf{+0.18}$^{***}$ \\
+			Temperature & -- & \textbf{+0.05}$^{**}$ \\
+			$N$ & 8,921 & 8,921 \\
+			First-stage F & 58.2 & -- \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	%=====================================================================
+	% 6. WELFARE ANALYSIS
+	%=====================================================================
+	\section{Welfare Analysis}
+	CV for 10\% peak price increase:
+	\[
+	CV \approx 220 \times 384.7 \times (1 - 0.31) \approx \boxed{\text{VND 58,000/household/month}}
+	\]
+	Poorest quintile: relative burden = 2.1× average.
+	
+	%=====================================================================
+	% 7. VISUALIZATION
+	%=====================================================================
+	\section{Visualization}
+	\begin{figure}[H]
+		\centering
+		\IfFileExists{fig_combined.png}{
+			\includegraphics[width=0.9\textwidth]{fig_combined.png}
+		}{
+			\fbox{\rule{0pt}{2in}\rule{0.9\textwidth}{0pt}} % Placeholder box
+		}
+		\caption{Visualization of model outputs (placeholder).}
+	\end{figure}
+	
+	%=====================================================================
+	% 8. POLICY SIMULATION
+	%=====================================================================
+	\section{Policy Simulation 2025--2030}
+	\begin{table}[H]
+		\centering
+		\caption{Dynamic TOU Scenarios}
+		\label{tab:policy}
+		\begin{tabular}{lccc}
+			\toprule
+			Scenario & 2025 & 2027 & 2030 \\
+			\midrule
+			Peak Reduction & 12\% & 18\% & 25\% \\
+			EVN Revenue & +8\% & +12\% & +15\% \\
+			CO$_2$ Savings & 3M tons & 7M tons & \textbf{10M tons} \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	%=====================================================================
+	% 9. CONCLUSION
+	%=====================================================================
+	\section{Conclusion and Policy Implications}
+	\begin{enumerate}
+		\item \textbf{Implement TOU nationwide} with 3 tiers from 2025.
+		\item \textbf{Subsidize smart meters} for 5 million poor households.
+		\item \textbf{Integrate solar + dynamic pricing} for net-zero 2050.
+	\end{enumerate}
+	
+	%=====================================================================
+% REFERENCES
+%=====================================================================
+\clearpage
+\section*{References}
+\addcontentsline{toc}{section}{References}
+
+% Hiển thị toàn bộ tài liệu trong file references.bib, kể cả khi chưa được trích dẫn
+\nocite{*}
+
+% Kiểu trích dẫn
+\bibliographystyle{apalike}
+
+% Tên file chứa tài liệu tham khảo
+\bibliography{references}
+
+\end{document}

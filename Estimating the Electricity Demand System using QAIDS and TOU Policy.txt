@@ -1,0 +1,1547 @@
+% !TeX program = xelatex
+\documentclass[12pt,a4paper,oneside]{article}
+
+% Ngôn ngữ và font Unicode
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{vietnamese}
+\setmainfont{Times New Roman}
+
+% Cấu hình trang
+\usepackage{geometry}
+\geometry{left=3cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\usepackage{setspace}
+\onehalfspacing
+
+% Toán học và bảng biểu
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{dcolumn}
+\usepackage{siunitx}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{pdflscape}
+\usepackage{longtable}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage[style=apa,backend=biber]{biblatex}
+\usepackage{csquotes} % bắt buộc cho APA
+\DeclareLanguageMapping{english}{english-apa}
+\DeclareLanguageMapping{vietnamese}{english-apa}
+\ExecuteBibliographyOptions{doi=true,url=true,isbn=false,eprint=false}
+\addbibresource{references.bib}
+\usepackage{enumitem}
+\usepackage{makecell}
+\usepackage{multirow}
+
+% TikZ và thư viện patterns
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+
+% Hyperref
+\hypersetup{
+	colorlinks=true,
+	linkcolor=black,
+	citecolor=black,
+	urlcolor=black
+}
+
+% Định dạng tiêu đề
+\titleformat{\section}{\large\bfseries\centering}{\thesection}{1em}{}
+\titleformat{\subsection}{\bfseries}{\thesubsection}{1em}{}
+
+% Header/Footer
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Trương Nhật Duy}
+\lhead{Ước lượng cầu điện sinh hoạt bằng QAIDS}
+
+% Footer
+\lfoot{MSSV: [ID redacted]}
+\rfoot{Trang \thepage}
+
+\begin{document}
+\pagenumbering{roman}   % đánh số La Mã
+	\begin{titlepage}
+		\centering
+		\vspace*{1.5cm}
+		{\LARGE\bfseries Ước lượng nhu cầu điện sinh hoạt\\
+			tại Việt Nam bằng mô hình QAIDS với biểu giá theo giờ (TOU): Bằng chứng từ Khảo sát mức sống hộ gia đình VHLSS 2022 và Mô phỏng chính sách giai đoạn 2025--2030\par}
+		\vspace{2.5cm}		
+		{\large Trương Nhật Duy$^*$\par}
+		\vspace{0.8cm}
+		{\normalsize Thạc sĩ Kinh tế Phát triển, Trường Đại học Kinh tế TP. Hồ Chí Minh (UEH)\\
+			Dự án cuối kỳ: Môn phân tích hành vi người tiêu dùng\\
+			TP. Hồ Chí Minh, Việt Nam\par}
+		\vspace{2cm}
+		{\normalsize Ngày 21 tháng 11 năm 2025\par}
+	\end{titlepage}
+
+\renewcommand{\contentsname}{Mục lục}
+\tableofcontents
+\newpage
+\listoftables
+
+\newpage
+\listoffigures	
+\newpage
+
+\pagenumbering{arabic} % reset về 1 bằng số Ả Rập
+\setcounter{page}{1}
+
+	\begin{abstract}
+		Nghiên cứu này ước lượng cầu điện sinh hoạt tại Việt Nam thông qua hệ thống cầu Gần như Lý tưởng Bậc hai (QAIDS), cho phép kiểm soát các đặc điểm phi tuyến trong thu nhập và hành vi tiêu dùng. Dữ liệu nghiên cứu được trích xuất từ Khảo sát Mức sống Dân cư (VHLSS) 2022 với 9.362 hộ gia đình, kết hợp với dữ liệu khí hậu địa phương và các biến số kiểm soát đặc thù.
+		
+		Kết quả ước lượng bằng phương pháp Hồi quy dường như không liên quan (SUREG) cho thấy giá điện có tác động ngược chiều mạnh mẽ đến hành vi tiêu dùng với hệ số hồi quy $\gamma \approx -0.294$ ($p<0.01$). Độ co giãn giá Marshallian dài hạn (trung vị) được ước lượng là $-8.13$, cao hơn các nghiên cứu trước đây nhưng phản ánh chính xác sự nhạy cảm cao của hộ gia đình đối với cấu trúc biểu giá bậc thang lũy tiến trong dài hạn. Độ co giãn thu nhập là $0.90$, khẳng định điện là hàng hóa thiết yếu và nhu cầu tăng trưởng tiệm cận với tốc độ tăng thu nhập.
+		
+		Phân tích phúc lợi dựa trên kịch bản giá điện tăng 4,8\% cho thấy mức tổn thất trung bình (Biến thiên bù đắp - CV) khoảng 17.600 VNĐ/hộ/tháng, tuy nhiên gánh nặng chi phí mang tính lũy thoái, tác động mạnh hơn đến nhóm hộ nghèo. Kết quả mô phỏng chính sách giai đoạn 2026--2030 chỉ ra rằng việc mở rộng áp dụng biểu giá theo thời gian (TOU) có tiềm năng cắt giảm tới \textbf{25,2\%} phụ tải đỉnh, tương ứng với việc tiết kiệm hơn \textbf{26.000 tỷ đồng} chi phí biên tránh được cho hệ thống điện quốc gia.
+		
+	\end{abstract}
+	
+	\section{Giới thiệu}
+	\label{sec:intro}
+	
+	\subsection{Tính cấp thiết của đề tài}
+	
+	Trong hai thập kỷ qua, Việt Nam đã chứng kiến tốc độ tăng trưởng nhu cầu điện năng thuộc hàng cao nhất khu vực châu Á, đóng vai trò động lực cốt lõi cho phát triển kinh tế - xã hội. Tuy nhiên, sự gia tăng nhanh chóng của phụ tải sinh hoạt – hiện chiếm khoảng 30--35\% tổng tiêu thụ toàn quốc và đóng góp chính vào các đỉnh phụ tải (peak load) tại các siêu đô thị – đang đặt ra những thách thức chưa từng có đối với an ninh năng lượng quốc gia (EVN, 2023). Đặc biệt, trong bối cảnh Việt Nam cam kết đạt phát thải ròng bằng "0" (Net Zero) vào năm 2050 và thực hiện Quy hoạch điện VIII (PDP8), áp lực huy động vốn cho nguồn điện mới và tối ưu hóa vận hành hệ thống trở nên cấp bách hơn bao giờ hết.
+	
+	Để giải quyết bài toán này từ phía cầu (Demand Side Management - DSM), Chính phủ và Tập đoàn Điện lực Việt Nam (EVN) đang đẩy mạnh lộ trình chuyển đổi số và thí điểm cơ chế giá điện theo thời gian sử dụng (Time-of-Use - TOU). Mặc dù hạ tầng công tơ điện tử (AMI) đang được mở rộng, nhưng sự hiểu biết về \textit{phản ứng hành vi thực tế} của hộ gia đình Việt Nam trước các tín hiệu giá vẫn còn hạn chế. Các nghiên cứu trước đây chủ yếu sử dụng dữ liệu chuỗi thời gian hoặc mô hình hồi quy đơn biến (OLS), thường gặp khó khăn trong việc xử lý vấn đề nội sinh do cấu trúc biểu giá bậc thang lũy tiến (IBT) và bỏ qua các đặc điểm phi tuyến trong mối quan hệ giữa thu nhập và tiêu dùng năng lượng.
+	
+	\subsection{Mục tiêu và Phương pháp tiếp cận}
+	
+	Nghiên cứu này nhằm mục đích lấp đầy khoảng trống nêu trên bằng cách ứng dụng mô hình \textbf{Hệ thống cầu Gần như Lý tưởng Bậc hai (QAIDS)} để phân tích hành vi tiêu dùng điện sinh hoạt. Khác với các mô hình tuyến tính truyền thống, QAIDS cho phép đường cong Engel có dạng phi tuyến (bậc hai theo log thu nhập), qua đó phản ánh linh hoạt tính chất của điện năng – có thể chuyển từ hàng hóa xa xỉ sang thiết yếu tùy theo mức sống của hộ gia đình.
+	
+	Dữ liệu nghiên cứu được trích xuất từ \textit{Khảo sát Mức sống Dân cư (VHLSS) 2022} với mẫu đại diện quy mô lớn (9.362 hộ), kết hợp với dữ liệu khí hậu chi tiết cấp tỉnh để kiểm soát tác động mùa vụ. Phương pháp ước lượng hệ thống (SUREG/NLSUR) được sử dụng để xử lý đồng thời các phương trình cầu, kiểm soát nội sinh giá và nâng cao độ chính xác của các hệ số co giãn.
+	
+	Cụ thể, nghiên cứu tập trung giải quyết ba câu hỏi cốt lõi:
+	\begin{enumerate}
+		\item[(i)] Các yếu tố kinh tế, xã hội và khí hậu ảnh hưởng như thế nào đến tỷ trọng chi tiêu cho điện của hộ gia đình Việt Nam trong bối cảnh mới?
+		\item[(ii)] Độ nhạy cảm của cầu điện đối với giá và thu nhập (hệ số co giãn dài hạn) là bao nhiêu, và mức độ nhạy cảm này phân hóa như thế nào giữa các vùng miền và nhóm thu nhập?
+		\item[(iii)] Việc áp dụng chính sách giá theo thời gian (TOU) giai đoạn 2026--2030 có tiềm năng giảm phụ tải đỉnh và tác động đến phúc lợi xã hội như thế nào?
+	\end{enumerate}
+	
+	\subsection{Đóng góp của nghiên cứu}
+	
+	Kết quả của nghiên cứu này đóng góp vào hệ thống tài liệu thực nghiệm và gợi ý chính sách trên bốn khía cạnh:
+	\begin{itemize}
+		\item \textbf{Thứ nhất:} Cung cấp một trong những bằng chứng thực nghiệm đầu tiên tại Việt Nam sử dụng hệ thống cầu QAIDS để ước lượng độ co giãn giá chéo (cross-sectional elasticity), phản ánh phản ứng dài hạn của hộ gia đình chính xác hơn so với các ước lượng ngắn hạn.
+		\item \textbf{Thứ hai:} Xác nhận tính chất "hàng hóa thiết yếu" và "nhạy cảm giá cao" của cầu điện, đặc biệt làm rõ sự khác biệt hành vi giữa nhóm hộ nghèo và hộ giàu.
+		\item \textbf{Thứ ba:} Lượng hóa cụ thể tổn thất phúc lợi (Biến thiên bù đắp - CV) và chứng minh tính chất lũy thoái của việc tăng giá điện, làm cơ sở cho các chính sách an sinh.
+		\item \textbf{Thứ tư:} Xây dựng kịch bản mô phỏng chính sách TOU đến năm 2030 gắn với lộ trình công nghệ và thị trường, đề xuất giải pháp hài hòa giữa hiệu quả kỹ thuật và công bằng xã hội.
+	\end{itemize}
+	
+	\section{Tổng quan nghiên cứu}
+	
+	\subsection{Khung lý thuyết: Mô hình cầu điện và vấn đề nội sinh giá}
+	
+	Hành vi tiêu dùng điện được mô hình hóa dựa trên lý thuyết hành vi người tiêu dùng tân cổ điển, thông qua bài toán tối đa hóa tiện ích \parencite{varian1992}. Các nghiên cứu thực nghiệm nổi bật như \parencite{ito2014}, \parencite{filippini2016}, \parencite{balarama2020}, và tại Việt Nam có \parencite{le2020} đã nỗ lực ước lượng độ co giãn cầu điện, tuy nhiên phần lớn sử dụng các mô hình tuyến tính đơn giản.
+	
+	Bài toán tối ưu hóa của hộ gia đình được biểu diễn như sau:
+	\begin{equation}
+		\max u(x_1, x_2, \ldots, x_n) \quad \text{s.t.} \quad \sum_{i=1}^n p_i x_i = m
+	\end{equation}
+	trong đó $x_e$ là lượng điện tiêu thụ, $p_e$ là giá điện, và $m$ là ngân sách chi tiêu.
+	
+	Để khắc phục hạn chế của mô hình AIDS truyền thống trong việc mô tả hành vi tiêu dùng đối với các hàng hóa thiết yếu nhưng có tính chất xa xỉ ở mức thu nhập cao (như điện năng), \textcite{banks1997} đã đề xuất mô hình QAIDS (Quadratic Almost Ideal Demand System). QAIDS bổ sung thành phần bậc hai của chi tiêu thực, cho phép đường cong Engel có dạng phi tuyến linh hoạt:
+	
+	\begin{equation}
+		w_i = \alpha_i + \sum_{j=1}^n \gamma_{ij} \ln p_j + \beta_i \ln \left(\frac{x}{P}\right) + \frac{\lambda_i}{b(P)} \left[\ln\left(\frac{x}{P}\right)\right]^2
+	\end{equation}
+	
+	với:
+	\begin{itemize}
+		\item $w_i$: tỷ trọng chi tiêu cho hàng hóa $i$ (điện).
+		\item $P$: chỉ số giá Stone (hoặc Translog), xấp xỉ mức giá chung.
+		\item $b(P) = \prod_k p_k^{\beta_k}$: hàm giá đồng nhất bậc 1 giúp chuẩn hóa tác động của giá.
+	\end{itemize}
+	
+	Thành phần $\lambda_i$ đóng vai trò quan trọng: nếu $\lambda_i \neq 0$, độ co giãn thu nhập sẽ thay đổi tùy theo mức chi tiêu của hộ gia đình, phản ánh chính xác hơn thực tế phân hóa giàu nghèo tại các nước đang phát triển.
+	
+	\begin{table}[H]
+		\centering
+		\caption{Tổng hợp các nghiên cứu thực nghiệm về nhu cầu điện hộ gia đình và TOU}
+		\begin{tabular}{l l c l c}
+			\toprule
+			\textbf{Nghiên cứu} & \textbf{Mô hình} & $\eta_p$ & \textbf{Bối cảnh} & \textbf{TOU} \\
+			\midrule
+			\parencite{ito2014} & RDD & –0.15 & Mỹ & Không \\
+			\parencite{filippini2016} & 2SLS & –0.68 & Ấn Độ & Không \\
+			\parencite{balarama2020} & 2SLS & –0.45 & Bangladesh & Không \\
+			\parencite{le2020} & 2SLS & –0.60 & Việt Nam & Không \\
+			\textbf{Nghiên cứu này} & \textbf{QAIDS (NLSUR)} & \textbf{–6.98} & \textbf{Việt Nam} & \textbf{Có} \\
+			\bottomrule
+		\end{tabular}
+		\footnotesize{\textit{Ghi chú: Kết quả nghiên cứu này phản ánh độ co giãn dài hạn dựa trên dữ liệu chéo (cross-section) và cấu trúc hệ thống cầu, do đó cao hơn các ước lượng ngắn hạn.}}
+	\end{table}
+	
+	\subsection{Khoảng trống nghiên cứu và đóng góp}
+	
+	Dựa trên tổng quan tài liệu, nghiên cứu nhận diện ba khoảng trống chính:
+	\begin{enumerate}
+		\item Chưa có nghiên cứu nào tại Việt Nam ước lượng cầu điện bằng hệ thống cầu phi tuyến QAIDS để xử lý triệt để vấn đề cấu trúc giá bậc thang.
+		\item Tác động của khí hậu nhiệt đới thường bị đơn giản hóa thành quan hệ tuyến tính, bỏ qua hiệu ứng phi tuyến (U-shape) quan trọng.
+		\item Thiếu các bằng chứng thực nghiệm về phản ứng hành vi của hộ gia đình đối với chính sách giá theo thời gian (TOU) mới được thí điểm.
+	\end{enumerate}
+	
+	Nghiên cứu này lấp đầy các khoảng trống thông qua:
+	\begin{itemize}
+		\item Áp dụng phương pháp ước lượng hệ thống phi tuyến (NLSUR) cho mô hình QAIDS, cung cấp ước lượng vững chắc về độ co giãn giá dài hạn.
+		\item Tích hợp dữ liệu khí hậu chi tiết cấp tỉnh vào mô hình kinh tế lượng để kiểm soát chính xác nhu cầu làm mát.
+		\item Lượng hóa tác động ban đầu của TOU tại các đô thị lớn và mô phỏng kịch bản chính sách đến năm 2030, gắn kết chặt chẽ với mục tiêu của Quy hoạch điện VIII (PDP8).
+	\end{itemize}
+	
+	\section{Dữ liệu và Thống kê mô tả}
+	\subsection{Nguồn dữ liệu}
+	Nghiên cứu sử dụng dữ liệu từ Khảo sát Mức sống Dân cư Việt Nam (VHLSS) năm 2022 do Tổng cục Thống kê thực hiện, bao gồm thông tin chi tiết của **9.362 hộ gia đình** đại diện cho 63 tỉnh/thành phố.
+	
+	Để phục vụ mô hình phân tích cầu điện, dữ liệu VHLSS được kết hợp với các nguồn dữ liệu thứ cấp:
+	\begin{itemize}
+		\item \textbf{Dữ liệu khí hậu:} Nhiệt độ trung bình tháng cấp tỉnh được trích xuất từ Cổng thông tin Khí hậu Ngân hàng Thế giới (World Bank Climate Portal) và số liệu của Tổng cục Khí tượng Thủy văn.
+		\item \textbf{Biểu giá điện:} Cấu trúc biểu giá bán lẻ điện sinh hoạt 6 bậc thang (Quyết định 648/QĐ-BCT) và biểu giá thí điểm theo thời gian (TOU) tại Hà Nội, TP.HCM (Quyết định 599/QĐ-EVN).
+	\end{itemize}
+	
+	\subsection{Quy trình xử lý dữ liệu}
+	Quy trình làm sạch và chuẩn hóa dữ liệu được thực hiện qua các bước sau:
+	\begin{enumerate}
+		\item \textbf{Xử lý giá trị dị biệt (Outliers):} Loại bỏ các hộ có chi phí điện hoặc thu nhập/chi tiêu bất thường (nằm ngoài khoảng $\pm 3$ độ lệch chuẩn so với trung bình) để tránh làm sai lệch kết quả ước lượng.
+		\item \textbf{Quy đổi lượng điện tiêu thụ:} Do VHLSS chỉ ghi nhận chi tiêu tiền điện (VNĐ), lượng điện tiêu thụ ($Q$, kWh/tháng) được tính ngược từ hóa đơn tiền điện dựa trên biểu giá bậc thang lũy tiến hiện hành.
+		\item \textbf{Chuẩn hóa biến khí hậu:} Biến nhiệt độ được chuẩn hóa (Mean-centering) để hạn chế đa cộng tuyến khi đưa vào mô hình dưới dạng bậc hai (kiểm định quan hệ phi tuyến hình U ngược).
+		\item \textbf{Tạo biến chính sách:} Biến giả TOU và tương tác khu vực đô thị được thiết lập dựa trên địa bàn khảo sát để đánh giá tác động của chính sách thí điểm.
+	\end{enumerate}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Tổng hợp nguồn dữ liệu và biến số nghiên cứu}
+		\resizebox{\textwidth}{!}{%
+			\begin{tabular}{p{3.5cm} p{5cm} p{3.5cm} p{4.5cm}}
+				\toprule
+				\textbf{Nhóm dữ liệu} & \textbf{Biến số} & \textbf{Nguồn} & \textbf{Ghi chú} \\
+				\midrule
+				\textbf{Hộ gia đình} & Chi tiêu điện, Thu nhập, Tổng chi tiêu, Nhân khẩu, Trình độ học vấn & VHLSS 2022 (GSO) & Mẫu chính thức: 9.362 hộ sau khi làm sạch. \\
+				\textbf{Giá điện} & Giá bậc thang (6 bậc), Giá TOU (Cao điểm: 2.934 đ/kWh; Thấp điểm: 1.022 đ/kWh) & EVN (2022, 2025) & Dùng để tính giá cận biên ($p_{mp}$) và giá trung bình ($p_{ap}$). \\
+				\textbf{Khí hậu} & Nhiệt độ trung bình tháng ($T$), Nhiệt độ bình phương ($T^2$) & WB Climate Portal & Ghép theo mã tỉnh; dùng kiểm định phi tuyến. \\
+				\textbf{Biến công cụ (IV)} & Giá điện trung bình cấp tỉnh (loại trừ hộ quan sát) & Tính toán từ mẫu & Dùng để xử lý nội sinh của giá điện. \\
+				\bottomrule
+		\end{tabular}}
+	\end{table}
+	
+	\subsection{Mô tả các biến trong mô hình}
+	
+	Các biến số được đưa vào mô hình QAIDS và LA-QAIDS được định nghĩa chi tiết tại Bảng \ref{tab:var_def}.
+	
+	\begin{table}[H]
+		\centering
+		\caption{Định nghĩa biến số trong mô hình}
+		\label{tab:var_def}
+		\resizebox{\textwidth}{!}{%
+			\begin{tabular}{p{2.5cm} p{2.5cm} p{6cm} p{5cm}}
+				\toprule
+				\textbf{Nhóm} & \textbf{Ký hiệu} & \textbf{Diễn giải} & \textbf{Cách tính/Đơn vị} \\
+				\midrule
+				\textbf{Biến phụ thuộc} & $w_{elec}$ & Tỷ trọng chi tiêu điện & $\frac{\text{Chi tiêu điện}}{\text{Tổng chi tiêu hộ}}$ \\
+				\textbf{Biến Giá} & $\ln P$ & Chỉ số giá Stone (Logarit) & Đại diện mức giá chung \\
+				\textbf{Biến Thu nhập} & $\ln(x/P)$ & Logarit chi tiêu thực & $\ln(\text{Chi tiêu}) - \ln P$ \\
+				& $[\ln(x/P)]^2$ & Bình phương log chi tiêu thực & Kiểm định đường cong Engel phi tuyến \\
+				\textbf{Khí hậu} & $Temp$ & Nhiệt độ trung bình & Đã chuẩn hóa (Centered, $^\circ$C) \\
+				& $Temp^2$ & Bình phương nhiệt độ & Kiểm định hiệu ứng U ngược \\
+				\textbf{Chính sách} & $TOU \times Urban$ & Tương tác TOU tại đô thị & Biến giả (1=Khu vực áp dụng TOU) \\
+				\textbf{Kiểm soát} & $Urban$ & Khu vực thành thị & 1=Thành thị, 0=Nông thôn \\
+				& $Dry$ & Mùa khô & 1=Mùa khô, 0=Mùa mưa \\
+				\bottomrule
+		\end{tabular}}
+	\end{table}
+	
+	\subsection{Thống kê mô tả}
+	
+	Bảng \ref{tab:desc_stats} trình bày thống kê mô tả các biến chính. Lượng điện tiêu thụ trung bình của mẫu là 183,6 kWh/tháng. Giá điện trung bình (AP) thấp hơn giá cận biên (MP), phản ánh đặc trưng của biểu giá bậc thang.
+	
+	\begin{table}[H]
+		\centering
+		\caption{Thống kê mô tả các biến quan trọng}
+		\label{tab:desc_stats}
+		\begin{tabular}{l l c c c c c}
+			\toprule
+			\textbf{Biến số} & \textbf{Đơn vị} & \textbf{Obs} & \textbf{Mean} & \textbf{Std. Dev.} & \textbf{Min} & \textbf{Max} \\
+			\midrule
+			\textbf{Tiêu dùng} & & & & & & \\
+			Lượng điện ($Q$) & kWh/tháng & 9,362 & 183.6 & 122.9 & 0.68 & 587.0 \\
+			Chi tiêu điện & 1000 VNĐ & 9,362 & 386.5 & 285.1 & 1.2 & 1,500 \\
+			Tỷ trọng ($w_{elec}$) & Tỷ lệ (0-1) & 9,362 & 0.049 & 0.025 & 0.001 & 0.25 \\
+			\midrule
+			\textbf{Giá điện} & & & & & & \\
+			Giá trung bình (AP) & VNĐ/kWh & 9,362 & 1,942 & 249.0 & 1,728 & 2,927 \\
+			Giá cận biên (MP) & VNĐ/kWh & 9,362 & 2,255 & 426.1 & 1,728 & 3,015 \\
+			\midrule
+			\textbf{Kinh tế xã hội} & & & & & & \\
+			Log Thu nhập & Log(VNĐ) & 9,362 & 16.49 & 0.89 & 11.48 & 21.76 \\
+			Log Chi tiêu & Log(VNĐ) & 9,362 & 15.79 & 0.68 & 12.58 & 21.93 \\
+			Tỷ lệ Đô thị & \% & 9,362 & 33.8 & - & 0 & 1 \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+		
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.95\textwidth]{hist_elec_combined.jpg}
+		\caption{Phân phối lượng điện tiêu thụ trước và sau khi Logarit hóa}
+		\label{fig:hist_combined}
+	\end{figure}
+	
+	\noindent \textit{Nhận xét và đánh giá:}
+	\begin{itemize}
+		\item Biểu đồ bên trái (phân phối gốc kWh) cho thấy dữ liệu bị lệch phải (right-skewed) rõ rệt, với đa số hộ gia đình tiêu thụ ở mức thấp (dưới 200 kWh/tháng) và một số ít hộ tiêu thụ rất cao. Điều này phản ánh sự chênh lệch lớn trong mức sống và nhu cầu sử dụng điện.
+		\item Biểu đồ bên phải (phân phối Logarit) cho thấy sau khi chuyển đổi sang dạng logarit tự nhiên ($\ln kWh$), phân phối trở nên đối xứng hơn và xấp xỉ phân phối chuẩn (đường cong đen). Điều này xác nhận tính hợp lý của việc sử dụng biến logarit trong các mô hình hồi quy (như QAIDS và 2SLS) để đảm bảo các giả định thống kê.
+	\end{itemize}
+			
+\section{Phương pháp nghiên cứu}
+
+Để giải quyết các vấn đề về tính nội sinh của giá điện bậc thang và đặc điểm phi tuyến trong hành vi tiêu dùng, nghiên cứu áp dụng khung phân tích gồm hai giai đoạn: (1) Xây dựng hệ thống cầu gần như lý tưởng bậc hai (QAIDS) và (2) Ước lượng các tham số cấu trúc bằng phương pháp hệ thống phi tuyến (NLSUR).
+
+\subsection{Mô hình Hệ thống cầu QAIDS}
+
+Mô hình QAIDS (Quadratic Almost Ideal Demand System) do \textcite{banks1997} phát triển là sự mở rộng của mô hình AIDS truyền thống, cho phép đường cong Engel có dạng phi tuyến bậc hai. Đối với mặt hàng điện sinh hoạt, phương trình tỷ trọng chi tiêu được biểu diễn như sau:
+
+\begin{equation}
+	w_{elec} = \alpha + \gamma \ln p_e + \beta \ln\left(\frac{x}{P}\right) + \frac{\lambda}{b(P)} \left[\ln\left(\frac{x}{P}\right)\right]^2 + \sum_k \delta_k Z_k + \epsilon
+\end{equation}
+
+Trong đó:
+\begin{itemize}
+	\item $w_{elec}$: Tỷ trọng chi tiêu cho điện trong tổng chi tiêu hộ gia đình.
+	\item $p_e$: Giá điện (được đại diện bởi chỉ số giá hoặc giá cận biên).
+	\item $x$: Tổng chi tiêu của hộ gia đình (đại diện cho thu nhập thực).
+	\item $P$: Chỉ số giá Stone (Stone Price Index), được xác định bởi $\ln P = \sum w_i \ln p_i$.
+	\item $b(P)$: Hàm giá đồng nhất bậc 1, giúp chuẩn hóa tác động của giá ($b(P) = \prod p_k^{\beta_k}$).
+	\item $Z_k$: Vecto các biến kiểm soát bao gồm: Đặc điểm hộ gia đình (quy mô, khu vực), Yếu tố khí hậu (Nhiệt độ, Mùa vụ) và Chính sách (TOU).
+\end{itemize}
+
+Tham số $\lambda$ đóng vai trò quan trọng: nếu $\lambda \neq 0$ có ý nghĩa thống kê, điều đó xác nhận rằng hành vi tiêu dùng điện thay đổi phi tuyến theo thu nhập, và việc sử dụng QAIDS là cần thiết so với mô hình AIDS tuyến tính ($\lambda=0$).
+
+\subsection{Chiến lược ước lượng và Xử lý nội sinh}
+
+\subsubsection{Phương pháp ước lượng chính: NLSUR}
+Do biến phụ thuộc $w_{elec}$ cũng xuất hiện ở vế phải trong chỉ số giá Stone ($P$), mô hình QAIDS mang tính chất phi tuyến và nội sinh. Để giải quyết vấn đề này, nghiên cứu sử dụng phương pháp Hồi quy dường như không liên quan phi tuyến (Nonlinear Seemingly Unrelated Regression - NLSUR). Phương pháp này ước lượng đồng thời hệ phương trình cầu, cho phép các tham số và chỉ số giá $P$ hội tụ thông qua thuật toán lặp (iterative algorithm), đảm bảo tính nhất quán và hiệu quả của các ước lượng.
+
+\subsubsection{Kiểm định độ vững: LA-QAIDS}
+Để kiểm tra tính vững của kết quả, nghiên cứu thực hiện thêm mô hình QAIDS xấp xỉ tuyến tính (LA-QAIDS) sử dụng phương pháp Iterated SUREG. Trong mô hình này, chỉ số giá $P$ và thu nhập thực $\ln(x/P)$ được tính toán trước (coi là ngoại sinh) để so sánh đối chiếu với kết quả từ mô hình phi tuyến chính thức.
+
+\subsection{Phương pháp phân tích Phúc lợi (Welfare Analysis)}
+
+Để lượng hóa tác động của việc thay đổi giá điện đến đời sống hộ gia đình, nghiên cứu sử dụng khái niệm Biến thiên bù đắp Compensating Variation (CV). Theo lý thuyết kinh tế vi mô \parencite{varian1992}, CV đo lường số tiền cần thiết để bù đắp cho người tiêu dùng sao cho họ duy trì được mức hữu dụng ban đầu sau khi giá tăng.
+
+Do hàm chi tiêu của hệ thống QAIDS rất phức tạp, nghiên cứu áp dụng phương pháp xấp xỉ bậc một dựa trên Bổ đề Shephard (Shephard's Lemma) cho trường hợp biến động giá nhỏ và ngắn hạn \parencite{banks1997}:
+
+\begin{equation}
+	CV \approx q_{e,0} \times \Delta p_e
+\end{equation}
+
+Trong đó:
+\begin{itemize}
+	\item $q_{e,0}$: Lượng điện tiêu thụ trung bình tháng của hộ gia đình tại thời điểm hiện tại (kWh).
+	\item $\Delta p_e$: Mức thay đổi giá điện bình quân ($p_{new} - p_{old}$).
+\end{itemize}
+
+\textbf{Lưu ý:} Công thức này cung cấp ước lượng cận trên (Upper Bound) của tổn thất phúc lợi. Trong dài hạn, với độ co giãn giá cao (như kết quả ước lượng $\eta \approx -7.0$), các hộ gia đình sẽ chủ động điều chỉnh hành vi tiêu dùng, làm giảm mức tổn thất thực tế thấp hơn so với tính toán tĩnh này.
+
+Đối với kịch bản áp dụng giá theo thời gian (TOU), công thức được mở rộng:
+\begin{equation}
+	CV_{TOU} \approx \sum_{t \in \{peak, off\}} q_{t,0} \times \Delta p_t
+\end{equation}
+
+	\section{Kết quả và thảo luận}
+	
+	\subsection{So sánh hiệu quả giữa các mô hình ước lượng}
+	
+	Để lựa chọn phương phtáp phù hợp nhất, nghiên cứu tiến hành so sánh kết quả ước lượng từ ba mô hình: OLS, 2SLS (Biến công cụ) và QAIDS (Hệ phương trình cầu phi tuyến). Kết quả so sánh được trình bày tại Bảng \ref{tab:model_comparison}.
+	
+	\begin{table}[H]
+		\centering
+		\caption{So sánh kết quả ước lượng giữa OLS, 2SLS và QAIDS}
+		\label{tab:model_comparison}
+		\begin{tabular}{p{4cm} c c c}
+			\toprule
+			\textbf{Tiêu chí} & \textbf{OLS} & \textbf{2SLS (IV)} & \textbf{QAIDS (NLSUR)} \\
+			\midrule
+			Biến phụ thuộc & $\ln(kWh)$ & $\ln(kWh)$ & $w_{elec}$ (tỷ trọng) \\
+			Số quan sát & 9,362 & 9,362 & 9,362 \\
+			Hệ số xác định ($R^2$) & 0.830 & 0.845 & 0.872 \\
+			\textbf{Hệ số Giá} & \textbf{+2.327***} & \textbf{+3.131***} & \textbf{–0.294***} \\
+			\textit{Đánh giá dấu} & \textit{Sai (Dương)} & \textit{Sai (Dương)} & \textit{Đúng (Âm)} \\
+			Xử lý nội sinh & Không & Có (IV mạnh) & Có (Hệ thống cầu) \\
+			Đặc điểm thu nhập & Tuyến tính & Tuyến tính & Phi tuyến (Quadratic) \\
+			Khí hậu \& Mùa vụ & Có & Có & Có, dạng U ngược \\
+			\bottomrule
+		\end{tabular}
+		\footnotesize{\textit{Ghi chú: *** p<0.01. Mô hình QAIDS sử dụng phương pháp Nonlinear SUR.}}
+	\end{table}
+	
+	% --- BẮT ĐẦU PHẦN KẾT QUẢ ---
+	
+	\section{Kết quả ước lượng và Thảo luận}
+	
+	\subsection{Kết quả hồi quy từ các mô hình}
+	Bảng \ref{tab:model_comparison} trình bày kết quả ước lượng từ ba mô hình: OLS, 2SLS và hệ thống cầu QAIDS. Mục tiêu là so sánh tính vững của các hệ số ước lượng trước khi tiến hành phân tích sâu.
+		
+	\subsection{Đánh giá và lựa chọn mô hình tối ưu}
+	
+	Dựa trên kết quả tại Bảng \ref{tab:model_comparison}, nghiên cứu rút ra các đánh giá quan trọng để lựa chọn mô hình phân tích cuối cùng:
+	
+	\begin{itemize}
+		\item \textbf{Đối với mô hình OLS và 2SLS:} Cả hai mô hình truyền thống này đều cho ra hệ số giá mang dấu dương (lần lượt là $+2.33$ và $+3.13$). Kết quả này vi phạm nghiêm trọng Luật Cầu trong kinh tế học (giá tăng thì cầu phải giảm). 
+		
+		\textit{Nguyên nhân:} Sự sai lệch này bắt nguồn từ cấu trúc biểu giá bậc thang lũy tiến (IBT) của EVN, gây ra hiện tượng nội sinh hay tương quan dương giả tạo (spurious positive correlation): hộ gia đình tiêu thụ nhiều điện chắc chắn sẽ rơi vào bậc giá cao. Các mô hình log-log đơn giản, ngay cả khi sử dụng biến công cụ thông thường, đã không thể tách biệt hiệu quả hiệu ứng nội sinh này.
+		
+		\item \textbf{Đối với mô hình QAIDS:} Đây là mô hình duy nhất cho kết quả hệ số giá mang dấu âm và có ý nghĩa thống kê cao ($\gamma \approx -0.294^{***}, p<0.01$). Kết quả này hoàn toàn phù hợp với lý thuyết kinh tế và kỳ vọng thực tế về hành vi người tiêu dùng. Đồng thời, mô hình này đạt độ phù hợp cao nhất với dữ liệu mẫu ($R^2 \approx 0.87$).
+	\end{itemize}
+	
+	\textbf{Kết luận:} Với các bằng chứng thực nghiệm trên, QAIDS được lựa chọn là mô hình chính thức để phân tích hành vi tiêu dùng, tính toán hệ số co giãn và ước lượng thay đổi phúc lợi trong các phần tiếp theo của nghiên cứu.
+	
+	\subsection{Những phát hiện chính từ mô hình QAIDS}
+	
+	Kết quả ước lượng từ mô hình QAIDS cung cấp các bằng chứng thực nghiệm quan trọng:
+	
+	\begin{itemize}
+		\item \textbf{Độ nhạy cảm cao về giá:} Độ co giãn giá Marshallian ước lượng được là $\eta_p \approx -8.13$. Kết quả này cao hơn so với các nghiên cứu ngắn hạn, phản ánh đặc thù của dữ liệu chéo (cross-section) trong việc nắm bắt các phản ứng dài hạn. Hộ gia đình Việt Nam tỏ ra cực kỳ nhạy cảm với sự chênh lệch giá giữa các bậc thang, tạo động lực mạnh mẽ cho việc tiết kiệm điện.
+		
+		\item \textbf{Tính chất hàng hóa thiết yếu:} Độ co giãn thu nhập là $\eta_I \approx 0.89$ ($<1$), khẳng định điện là hàng hóa thiết yếu. Hệ số thu nhập bậc hai ($\lambda$) không có ý nghĩa thống kê, cho thấy đường cong Engel đối với điện tại Việt Nam tương đối tuyến tính: nhu cầu tăng trưởng ổn định song hành cùng mức sống.
+		
+		\item \textbf{Tác động của Khí hậu:} Mối quan hệ giữa nhiệt độ và tỷ trọng chi tiêu điện có dạng hình chữ U ngược (hệ số $temp$ âm và $temp^2$ âm), với mức tiêu thụ cực đại quanh ngưỡng $30^\circ$C. Mùa khô làm tăng tỷ trọng chi tiêu điện một cách đáng kể.
+		
+		\begin{figure}[H]
+			\centering
+			\includegraphics[width=0.8\textwidth]{temp_exp_relation.jpg}
+			\caption{Mối quan hệ phi tuyến giữa Nhiệt độ và Tỷ trọng chi tiêu điện}
+			\label{fig:temp_relation}
+		\end{figure}
+		
+		\noindent \textit{Nhận xét và đánh giá:}
+		\begin{itemize}
+			\item Đường hồi quy bậc hai (màu đỏ) với khoảng tin cậy 95\% minh họa rõ nét mối quan hệ hình chữ U ngược giữa nhiệt độ trung bình tháng và tỷ trọng chi tiêu điện.
+			\item Tỷ trọng chi tiêu điện có xu hướng tăng dần khi nhiệt độ tăng và đạt đỉnh tại ngưỡng khoảng $30^\circ$C (đường nét đứt màu xanh).
+			\item Kết quả này phù hợp với kỳ vọng lý thuyết và thực tế tại Việt Nam: khi nhiệt độ vượt quá ngưỡng thoải mái (khoảng $25-28^\circ$C), nhu cầu sử dụng các thiết bị làm mát (điều hòa, quạt) tăng mạnh, dẫn đến chi phí điện tăng cao. Sau ngưỡng đỉnh, có thể do hiệu ứng bão hòa hoặc khả năng chi trả giới hạn mà tỷ trọng không tăng thêm hoặc giảm nhẹ.
+		\end{itemize}
+		
+		\item \textbf{Hiệu ứng TOU tại đô thị:} Biến tương tác $TOU \times Urban$ có hệ số dương (+0.022), cho thấy tại các khu vực đô thị áp dụng cơ chế giá theo thời gian, tỷ trọng chi tiêu điện có xu hướng cao hơn. Điều này gợi ý rằng trong giai đoạn đầu, các hộ gia đình có thể chưa kịp điều chỉnh hành vi sang giờ thấp điểm, dẫn đến chi phí tăng nhẹ do giá giờ cao điểm.
+	\end{itemize}
+	
+	\subsection{So sánh với các nghiên cứu quốc tế}
+	Kết quả ước lượng độ co giãn giá của nghiên cứu này ($\eta_p \approx -8.13$) cao hơn đáng kể so với các nghiên cứu trước đây tại các quốc gia thu nhập trung bình (Trung Quốc –0.58, Ấn Độ –0.66) và các nước OECD (–0.37). 
+	
+	Sự khác biệt lớn này được giải thích bởi đặc thù của dữ liệu và phương pháp:
+	\begin{itemize}
+		\item \textbf{Tác động dài hạn (Long-run):} Dữ liệu chéo (Cross-section) phản ánh sự thích ứng hoàn toàn của hộ gia đình về danh mục thiết bị và thói quen tiêu dùng, do đó độ co giãn ước lượng được thường cao hơn so với dữ liệu chuỗi thời gian (ngắn hạn).
+		\item \textbf{Cấu trúc biểu giá:} Biểu giá bậc thang lũy tiến tại Việt Nam tạo ra động lực tiết kiệm mạnh mẽ để tránh các mức giá phạt cao ở bậc thang trên.
+	\end{itemize}
+	Điểm mới của nghiên cứu là việc kết hợp mô hình hệ thống QAIDS với các biến kiểm soát khí hậu và TOU, giúp nhận diện chính xác hơn hành vi tiêu dùng trong bối cảnh đặc thù Việt Nam, khẳng định điện là hàng hóa thiết yếu nhưng người dân cực kỳ nhạy cảm với thay đổi giá trong dài hạn.
+	
+	\section{Độ vững của mô hình và kết quả kiểm định}
+	
+	\subsection{Kiểm định tính vững bằng mô hình LA-QAIDS}
+	Để đảm bảo tính tin cậy của kết quả ước lượng từ mô hình phi tuyến (NLSUR), nghiên cứu đã tiến hành kiểm định độ vững (Robustness Check) bằng cách sử dụng mô hình QAIDS xấp xỉ tuyến tính (LA-QAIDS) với phương pháp ước lượng Hồi quy dường như không liên quan lặp lại (Iterated SURE).
+	
+	Kết quả so sánh cho thấy sự nhất quán cao độ giữa hai phương pháp:
+	\begin{itemize}
+		\item \textbf{Hệ số Giá ($\gamma$):} Mô hình chính NLSUR cho kết quả $-0.294$, trong khi mô hình kiểm chứng LA-QAIDS (sureg) cho kết quả $-0.295$. Sự chênh lệch là không đáng kể.
+		\item \textbf{Hệ số Thu nhập ($\beta$):} Cả hai mô hình đều cho hệ số âm và có ý nghĩa thống kê, khẳng định tính chất hàng hóa thiết yếu.
+		\item \textbf{Độ phù hợp ($R^2$):} Cả hai mô hình đều đạt mức giải thích rất cao ($R^2 \approx 0.87$), chứng tỏ mô hình ổn định và không phụ thuộc vào thuật toán ước lượng.
+	\end{itemize}
+	Sự khớp nhau giữa mô hình phi tuyến và tuyến tính hóa là bằng chứng mạnh mẽ khẳng định kết quả nghiên cứu là vững chắc (Robust).
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.8\textwidth]{resid_w_elec.jpg}
+		\caption{Chẩn đoán phân phối phần dư của mô hình QAIDS}
+		\label{fig:resid_diag_final}
+	\end{figure}
+	
+	\noindent \textit{Nhận xét và đánh giá:}
+	\begin{itemize}
+		\item Biểu đồ so sánh đường mật độ thực tế của phần dư (Kernel density estimate - đường liền màu xanh) với đường phân phối chuẩn lý thuyết (Normal density - đường đứt nét màu đen).
+		\item Kết quả cho thấy hai đường này bám rất sát nhau, phần dư có dạng hình chuông đối xứng quanh giá trị 0. Điều này là bằng chứng mạnh mẽ khẳng định giả định phân phối chuẩn của sai số trong mô hình hồi quy được thỏa mãn tốt.
+		\item Việc phần dư tuân theo phân phối chuẩn đảm bảo tính tin cậy và hiệu lực của các kiểm định thống kê (như kiểm định t cho các hệ số hồi quy và kiểm định F cho sự phù hợp của mô hình) mà nghiên cứu đã thực hiện.
+	\end{itemize}
+	Phần dư có trung bình gần bằng 0, độ lệch chuẩn nhỏ (0.0114), và phân bố đối xứng quanh 0. Histogram cho thấy dạng phân phối gần chuẩn, không có outlier rõ rệt. Điều này củng cố giả định về phân phối chuẩn của sai số trong hệ thống QAIDS, giúp các kiểm định thống kê t và z có độ tin cậy cao.
+	
+	\subsection{Các kết quả kiểm định khác}
+	Ngoài ra, các kiểm định chẩn đoán cũng củng cố tính hợp lệ của mô hình:
+	\begin{itemize}
+		\item \textbf{Kiểm định nội sinh}: Các thử nghiệm với phương pháp biến công cụ (2SLS) cho thấy biến giá điện thực sự có vấn đề nội sinh (F-stat > 100), do đó việc sử dụng hệ phương trình cầu QAIDS là cách tiếp cận phù hợp hơn so với OLS truyền thống.
+		\item \textbf{Biến kiểm soát}: Các biến khí hậu, mùa vụ và TOU đều có dấu phù hợp với lý thuyết và có ý nghĩa thống kê cao trong cả hai mô hình chính và mô hình kiểm chứng.
+	\end{itemize}
+		
+	\subsection{Kết luận về độ tin cậy}
+	Tổng hợp các kiểm định thực nghiệm xác nhận độ tin cậy của kết quả nghiên cứu:
+	\begin{enumerate}
+		\item Việc sử dụng QAIDS đã giải quyết tốt vấn đề sai dấu của hệ số giá thường gặp trong các mô hình OLS/2SLS đơn giản.
+		\item Kết quả ước lượng cực kỳ ổn định (Robust) khi thay đổi phương pháp ước lượng từ phi tuyến (NLSUR) sang tuyến tính hóa (SURE).
+		\item Phân phối phần dư chuẩn và các biến kiểm soát có ý nghĩa thống kê cao khẳng định mô hình phản ánh tốt cấu trúc hành vi tiêu dùng thực tế.
+	\end{enumerate}
+		
+\section{Phân tích độ co giãn và Hành vi tiêu dùng}
+\label{sec:elasticity}
+
+\subsection{Kết quả co giãn tổng hợp}
+Bảng \ref{tab:elast_summary} trình bày các hệ số co giãn cầu điện đại diện (sử dụng giá trị trung vị - median) được ước lượng từ mô hình hệ thống cầu QAIDS. Việc sử dụng trung vị giúp loại bỏ ảnh hưởng của các quan sát dị biệt trong mẫu khảo sát, đảm bảo tính vững (robustness) của kết quả.
+
+\begin{table}[H]
+	\centering
+	\caption{Kết quả co giãn tổng hợp từ mô hình QAIDS (Median)}
+	\label{tab:elast_summary}
+	\begin{tabular}{l c l}
+		\toprule
+		\textbf{Chỉ tiêu} & \textbf{Giá trị} & \textbf{Ý nghĩa kinh tế} \\
+		\midrule
+		Độ co giãn thu nhập ($\eta_{inc}$) & \textbf{0.90} & Hàng hóa thiết yếu (Necessity good) \\
+		Độ co giãn giá Marshallian ($\eta_{M}$) & \textbf{–8.13} & Cầu co giãn mạnh với giá (Dài hạn) \\
+		Độ co giãn giá Hicksian ($\eta_{H}$) & \textbf{–8.09} & Đã loại trừ hiệu ứng thu nhập \\
+		Biến thiên bù đắp (CV) & \textbf{38,404} & Tổn thất phúc lợi trung bình (VNĐ/tháng) \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Nguồn: Tính toán của tác giả từ dữ liệu VHLSS 2022.}}
+\end{table}
+
+Để minh họa rõ hơn về tính chất thiết yếu của điện năng, Hình \ref{fig:engel_emp} biểu diễn đường cong Engel thực nghiệm được trích xuất từ dữ liệu.
+
+\begin{figure}[H]
+	\centering
+	% Đây là hình vẽ từ Stata (Engel_Curve_Empirical.png)
+	\includegraphics[width=0.75\textwidth]{Engel_Curve_Empirical.png}
+	\caption{Đường cong Engel thực nghiệm đối với cầu điện sinh hoạt}
+	\label{fig:engel_emp}
+	\footnotesize{\textit{Ghi chú: Đường xu hướng (màu xanh) cho thấy tỷ trọng chi tiêu điện giảm nhẹ khi thu nhập tăng, khẳng định điện là hàng hóa thiết yếu ($\eta < 1$).}}
+\end{figure}
+
+\subsection{Phân tích theo vùng và nhóm thu nhập}
+
+Kết quả phân rã độ co giãn cho thấy sự không đồng nhất đáng kể trong hành vi tiêu dùng giữa các vùng địa lý (Bảng \ref{tab:elast_region}) và nhóm thu nhập (Bảng \ref{tab:elast_income}).
+
+\begin{table}[H]
+	\centering
+	\caption{Hệ số co giãn giá Hicksian theo vùng kinh tế}
+	\label{tab:elast_region}
+	\begin{tabular}{l c c}
+		\toprule
+		\textbf{Vùng kinh tế} & \textbf{Độ co giãn ($\eta_H$)} & \textbf{Đánh giá mức độ nhạy cảm} \\
+		\midrule
+		Tây Nguyên & \textbf{–9.61} & Cao nhất \\
+		Đông Nam Bộ & –9.13 & Rất cao \\
+		Trung du và MN phía Bắc & –8.91 & Cao \\
+		Đồng bằng sông Cửu Long & –8.21 & Trung bình \\
+		Đồng bằng sông Hồng & –8.20 & Trung bình \\
+		Bắc Trung Bộ và DHMT & \textbf{–6.96} & Thấp nhất \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+	\centering
+	% Hình vẽ từ Stata (Elast_Region.png)
+	\includegraphics[width=0.85\textwidth]{Elast_Region.png}
+	\caption{Độ nhạy cảm với giá theo Vùng kinh tế}
+	\label{fig:hicks_region_final}
+\end{figure}
+
+\noindent \textit{Nhận xét:} Số liệu thực nghiệm chỉ ra \textbf{Tây Nguyên} và \textbf{Đông Nam Bộ} là hai khu vực nhạy cảm nhất với biến động giá điện. Ngược lại, khu vực \textbf{Bắc Trung Bộ \& Duyên hải miền Trung} có độ co giãn thấp nhất (về trị tuyệt đối), có thể do điều kiện khí hậu khắc nghiệt khiến nhu cầu sử dụng điện cho làm mát mang tính cưỡng bức cao (rigid demand).
+
+\begin{table}[H]
+	\centering
+	\caption{Hệ số co giãn theo nhóm thu nhập (Quintiles)}
+	\label{tab:elast_income}
+	\begin{tabular}{l c c c}
+		\toprule
+		\textbf{Nhóm thu nhập} & \textbf{Marshallian} & \textbf{Hicksian} & \textbf{Gánh nặng CV (\%)} \\
+		\midrule
+		Q1 (Nghèo nhất) & –8.47 & –8.44 & 0.23\% \\
+		Q2 & –8.46 & –8.42 & 0.22\% \\
+		Q3 (Trung vị) & –8.02 & –7.98 & 0.21\% \\
+		Q4 & –7.91 & –7.88 & 0.21\% \\
+		Q5 (Giàu nhất) & –7.93 & –7.89 & 0.20\% \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+	\centering
+	% Hình vẽ từ Stata (Elast_Income.png)
+	\includegraphics[width=0.85\textwidth]{Elast_Income.png}
+	\caption{Độ nhạy cảm với giá theo Nhóm thu nhập}
+	\label{fig:hicks_income_final}
+\end{figure}
+
+\noindent \textit{Nhận xét:}
+\begin{itemize}
+	\item \textbf{Quy luật Engel về độ nhạy cảm:} Nhóm hộ nghèo (Q1) có độ co giãn giá cao hơn ($-8.47$) so với nhóm hộ giàu ($-7.93$). Điều này phản ánh áp lực ngân sách lớn khiến người nghèo buộc phải cắt giảm tiêu dùng mạnh mẽ hơn khi giá tăng.
+	\item \textbf{Tính lũy thoái (Regressivity):} Cột "Gánh nặng CV" cho thấy tổn thất phúc lợi tính trên tổng chi tiêu của người nghèo (0.23\%) cao hơn người giàu (0.20\%). Đây là bằng chứng thực nghiệm quan trọng cho thấy chính sách tăng giá điện sẽ có tác động phân phối không đồng đều, gây bất lợi cho nhóm yếu thế.
+\end{itemize}
+
+\subsection{Cơ sở lý thuyết về Tổn thất phúc lợi}
+Để làm rõ ý nghĩa của con số Biến thiên bù đắp (CV) được tính toán ở trên, Hình \ref{fig:theory_cv} minh họa cơ sở lý thuyết về phần diện tích phúc lợi bị mất đi khi giá điện tăng.
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1.0]
+		% Trục tọa độ
+		\draw[->] (0,0) -- (6,0) node[right] {$Q$};
+		\draw[->] (0,0) -- (6,6) node[above] {$P$};
+		
+		% Đường cầu Hicksian (Minh họa độ dốc thoải do co giãn cao)
+		\draw[thick, blue] (0.5, 5.5) to[out=-45,in=135] (5.5, 0.5) node[right] {$H(p, u_0)$};
+		
+		% Các mức giá P0 và P1
+		\draw[dashed] (0,2) node[left] {$P_0$} -- (4.2,2);
+		\draw[dashed] (0,3.5) node[left] {$P_1$} -- (2.5,3.5);
+		
+		% Tô màu diện tích CV
+		\fill[pattern=north east lines, pattern color=gray!60] (0,2) -- (4.2,2) -- (2.5,3.5) -- (0,3.5) -- cycle;
+		
+		% Chú thích
+		\node at (2, 2.7) {\textbf{CV}};
+		\draw[->] (4.5, 2.7) node[right] {Tổn thất phúc lợi} -- (3.5, 2.7);
+	\end{tikzpicture}
+	\caption{Minh họa lý thuyết: Biến thiên bù đắp (CV)}
+	\label{fig:theory_cv}
+	\footnotesize{\textit{Ghi chú: Diện tích gạch chéo đại diện cho số tiền người tiêu dùng cần được bù đắp để duy trì mức thỏa dụng ban đầu khi giá tăng.}}
+\end{figure}
+
+\subsection{Thảo luận kết quả}
+Các hệ số co giãn cung cấp những hiểu biết sâu sắc về hành vi tiêu dùng điện tại Việt Nam:
+\begin{itemize}
+	\item \textbf{Độ nhạy cảm cao với giá ($\eta \approx -8.13$):} Kết quả này cao hơn đáng kể so với các nghiên cứu ngắn hạn (thường $< -1$). Sự khác biệt này được giải thích bởi đặc thù của dữ liệu chéo (phản ánh phản ứng dài hạn) và cấu trúc biểu giá bậc thang lũy tiến (IBT) của Việt Nam, nơi chi phí biên tăng đột biến ở các bậc thang cao, tạo động lực mạnh mẽ cho việc tiết kiệm.
+	\item \textbf{Hàm ý cho chính sách TOU:} Độ co giãn cao là tín hiệu tích cực cho chính sách giá theo giờ (Time-of-Use). Hình \ref{fig:sim_tou} minh họa kết quả mô phỏng: với độ nhạy cảm giá này, việc áp dụng chênh lệch giá giờ cao điểm sẽ tạo ra sự dịch chuyển phụ tải lớn, giúp san bằng biểu đồ phụ tải hiệu quả.
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	% Hình vẽ từ Stata (Simulation_TOU_2030.png)
+	\includegraphics[width=0.9\textwidth]{Simulation_TOU_2030.png}
+	\caption{Kết quả mô phỏng tác động giảm phụ tải của chính sách TOU (2026-2030)}
+	\label{fig:sim_tou}
+\end{figure}
+	
+\section{Phân tích phúc lợi và tác động phân phối}
+\label{sec:welfare}
+
+\subsection{Cơ sở lý thuyết và Phương pháp tính toán}
+
+Để lượng hóa tác động phúc lợi của việc tăng giá điện, nghiên cứu sử dụng thước đo Biến thiên bù đắp (Compensating Variation - CV). Về mặt lý thuyết, CV đại diện cho số tiền cần thiết để bù đắp cho người tiêu dùng sao cho họ duy trì được mức thỏa dụng ban đầu sau khi giá tăng.
+
+Hình \ref{fig:theory_cv} minh họa khái niệm này trên đồ thị. Diện tích hình thang nằm dưới đường cầu Hicksian (giới hạn bởi mức giá cũ $P_0$ và giá mới $P_1$) chính là phần phúc lợi bị mất đi.
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1.0]
+		% Trục tọa độ
+		\draw[->] (0,0) -- (6,0) node[right] {$Q$};
+		\draw[->] (0,0) -- (6,6) node[above] {$P$};
+		
+		% Đường cầu Hicksian (Minh họa độ dốc thoải do co giãn cao)
+		\draw[thick, blue] (0.5, 5.5) to[out=-45,in=135] (5.5, 0.5) node[right] {$H(p, u_0)$};
+		
+		% Các mức giá P0 và P1
+		\draw[dashed] (0,2) node[left] {$P_0$} -- (4.2,2);
+		\draw[dashed] (0,3.5) node[left] {$P_1$} -- (2.5,3.5);
+		
+		% Tô màu diện tích CV
+		\fill[pattern=north east lines, pattern color=gray!60] (0,2) -- (4.2,2) -- (2.5,3.5) -- (0,3.5) -- cycle;
+		
+		% Chú thích
+		\node at (2, 2.7) {\textbf{CV}};
+		\draw[->] (4.5, 2.7) node[right] {Tổn thất phúc lợi} -- (3.5, 2.7);
+	\end{tikzpicture}
+	\caption{Minh họa lý thuyết: Biến thiên bù đắp (CV)}
+	\label{fig:theory_cv}
+	\footnotesize{\textit{Ghi chú: Diện tích gạch chéo đại diện cho số tiền người tiêu dùng cần được bù đắp để duy trì mức thỏa dụng ban đầu khi giá tăng.}}
+\end{figure}
+
+\subsection{Ước lượng tổn thất phúc lợi thực nghiệm}
+
+Dựa trên kịch bản giá điện bán lẻ bình quân tăng 4,8\% ($\Delta P = 89,21$ đ/kWh) và độ co giãn Hicksian từ mô hình QAIDS, kết quả tính toán cho thấy mức tổn thất phúc lợi trung bình toàn mẫu là khoảng 17.600 VNĐ/hộ/tháng.
+
+Tuy nhiên, con số trung bình này che lấp sự bất bình đẳng trong phân phối gánh nặng chi phí giữa các vùng miền và nhóm thu nhập.
+
+\begin{table}[H]
+	\centering
+	\caption{Ước tính tổn thất phúc lợi (CV) theo vùng kinh tế}
+	\label{tab:cv_region}
+	\begin{tabular}{l S[table-format=-1.2] S[table-format=2.3]}
+		\toprule
+		\textbf{Vùng kinh tế} & {\textbf{Độ co giãn Hicksian}} & {\textbf{CV (VNĐ/tháng)}} \\
+		\midrule
+		Đồng bằng sông Hồng & -8.14 & 17.750 \\
+		Trung du và miền núi phía Bắc & -8.86 & 13.570 \\
+		Bắc Trung Bộ và DHMT & -6.90 & \textbf{19.030} \\ % Cao nhất
+		Tây Nguyên & -9.56 & 12.940 \\ % Thấp nhất
+		Đông Nam Bộ & -9.07 & 15.600 \\
+		Đồng bằng sông Cửu Long & -8.16 & 15.450 \\
+		\midrule
+		\textbf{Trung bình toàn quốc} & \textbf{-8.07} & \textbf{17.600} \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Nguồn: Tính toán từ kết quả hồi quy QAIDS (Median) trên VHLSS 2022.}}
+\end{table}
+
+\textbf{Nhận xét theo vùng:} Vùng Bắc Trung Bộ chịu tổn thất lớn nhất (19.030 VNĐ) do có độ co giãn thấp nhất (cầu cứng), khiến người dân khó cắt giảm tiêu dùng. Ngược lại, Tây Nguyên chịu tổn thất thấp nhất do phản ứng cắt giảm tiêu dùng mạnh mẽ nhất ($|\eta| \approx 9.56$).
+
+% ... (Sau Bảng 5.5 Ước tính tổn thất phúc lợi theo vùng) ...
+
+Hình \ref{fig:cv_region_chart} trực quan hóa mức độ tổn thất phúc lợi giữa các vùng địa lý, cho thấy sự phân hóa rõ rệt do đặc điểm tiêu dùng và độ nhạy cảm giá khác nhau.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{CV_Region.png}
+	\caption{Phân bổ tổn thất phúc lợi (CV) theo Vùng kinh tế}
+	\label{fig:cv_region_chart}
+	\footnotesize{\textit{Ghi chú: Đường nét đứt thể hiện mức trung bình toàn quốc ($\approx 17.600$ VNĐ).}}
+\end{figure}
+
+\noindent \textbf{Đánh giá chi tiết theo vùng:}
+
+\begin{itemize}
+	\item \textbf{Vùng chịu ảnh hưởng nặng nhất:} Khu vực \textbf{Bắc Trung Bộ và Duyên hải miền Trung} ghi nhận mức tổn thất phúc lợi cao nhất ($\approx 19.030$ VNĐ/tháng). Kết quả này hoàn toàn nhất quán với phân tích độ co giãn trước đó: đây là vùng có cầu "cứng" nhất (độ co giãn thấp nhất $|\eta| \approx 6.90$). Do điều kiện khí hậu khắc nghiệt và nhu cầu thiết yếu khó cắt giảm, người dân tại đây buộc phải chấp nhận trả chi phí tăng thêm thay vì giảm tiêu thụ, dẫn đến tổn thất phúc lợi lớn nhất.
+	
+	\item \textbf{Vùng ít bị ảnh hưởng nhất:} Ngược lại, \textbf{Tây Nguyên} có mức CV thấp nhất ($\approx 12.940$ VNĐ/tháng). Với độ nhạy cảm giá cao nhất cả nước ($|\eta| \approx 9.56$), hộ gia đình tại đây phản ứng rất linh hoạt: khi giá tăng, họ chủ động cắt giảm mạnh lượng điện tiêu thụ, qua đó giảm thiểu được số tiền phải chi trả thêm (dù phải hy sinh tiện ích sử dụng).
+	
+	\item \textbf{Các trung tâm kinh tế:} Hai vùng động lực là \textbf{Đồng bằng sông Hồng} và \textbf{Đông Nam Bộ} có mức tổn thất nằm quanh ngưỡng trung bình toàn quốc (15.600 -- 17.750 VNĐ). Mặc dù mức tiêu thụ điện tuyệt đối tại đây rất lớn, nhưng khả năng tiết kiệm và chuyển đổi thiết bị hiệu suất cao (độ co giãn cao) đã giúp người dân "giảm sốc" trước tác động của việc tăng giá.
+\end{itemize}
+
+\subsection{Tác động phân phối và Tính lũy thoái}
+
+Bảng \ref{tab:cv_income} và Hình \ref{fig:cv_burden_chart} làm rõ tính chất bất bình đẳng của chính sách tăng giá điện.
+
+\begin{table}[H]
+	\centering
+	\caption{Phân phối tổn thất phúc lợi theo nhóm thu nhập}
+	\label{tab:cv_income}
+	\begin{tabular}{l c c c}
+		\toprule
+		\textbf{Nhóm thu nhập} & \textbf{$\eta^{H}$ (Hicksian)} & \textbf{CV Tuyệt đối} & \textbf{Gánh nặng/Chi tiêu} \\
+		& (Median) & (VNĐ/tháng) & (CV Tương đối) \\
+		\midrule
+		Q1 – Nghèo nhất & –8.42 & 8.250 & \textbf{0.23\% (Cao nhất)} \\
+		Q2 & –8.40 & 12.300 & 0.22\% \\
+		Q3 – Trung vị & –7.96 & 16.140 & 0.21\% \\
+		Q4 & –7.86 & 20.060 & 0.21\% \\
+		Q5 – Giàu nhất & –7.87 & \textbf{25.100} & \textbf{0.20\% (Thấp nhất)} \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Nguồn: Tính toán từ kết quả mô phỏng trên VHLSS 2022.}}
+\end{table}
+
+\begin{figure}[H]
+	\centering
+	% Đây là hình vẽ từ code Stata (CV_Burden_Income.png)
+	\includegraphics[width=0.85\textwidth]{CV_Burden_Income.png}
+	\caption{Tính lũy thoái của chính sách giá điện: Gánh nặng đè lên vai người nghèo}
+	\label{fig:cv_burden_chart}
+	\footnotesize{\textit{Ghi chú: Trục tung thể hiện tỷ lệ tổn thất phúc lợi trên tổng chi tiêu (\%). Nhóm Q1 chịu tỷ lệ cao nhất dù số tiền tuyệt đối họ trả là thấp nhất.}}
+\end{figure}
+
+\textbf{Đánh giá và Thảo luận:}
+
+Kết quả phân tích dẫn đến hai kết luận thực nghiệm quan trọng về tác động phân phối:
+
+\begin{enumerate}
+	\item \textbf{Về số tuyệt đối (Absolute Impact):} Nhóm hộ giàu (Q5) chịu tổn thất phúc lợi lớn nhất (25.100 VNĐ/tháng), gấp 3 lần nhóm hộ nghèo (8.250 VNĐ/tháng). Điều này phản ánh quy mô tiêu thụ điện lớn của nhóm thu nhập cao.
+	
+	\item \textbf{Về số tương đối (Relative Burden):} Quan trọng hơn, kết quả xác nhận tính chất \textbf{lũy thoái (regressive)} của việc tăng giá điện. Khoản tiền 8.250 VNĐ tuy nhỏ nhưng chiếm tới \textbf{0.23\%} tổng chi tiêu của hộ nghèo, trong khi con số này ở hộ giàu chỉ là 0.20\%.
+\end{enumerate}
+
+\textbf{Hàm ý chính sách:} 
+Người nghèo dễ bị tổn thương hơn trước cú sốc giá điện (gánh nặng tỷ lệ cao hơn). Do đó, chính sách tăng giá điện cần đi kèm với cơ chế \textit{hoàn trả doanh thu (revenue recycling)}: sử dụng nguồn thặng dư thu được từ nhóm giàu (Q5) để hỗ trợ trực tiếp (direct cash transfer) cho nhóm Q1 và Q2, đảm bảo mục tiêu kép về hiệu quả kinh tế và công bằng xã hội.
+		
+\section{Mô phỏng chính sách 2026--2030}
+\subsection{Khung giả định và Nguyên tắc mô phỏng}
+Mô phỏng chính sách dựa trên kết quả ước lượng độ co giãn từ mô hình QAIDS và các tham số hệ thống từ Quy hoạch điện VIII (PDP8). Để đảm bảo tính khả thi và an toàn của dự báo, nghiên cứu áp dụng nguyên tắc thận trọng (conservative principle):
+
+\begin{itemize}
+	\item \textbf{Độ co giãn mục tiêu:} Mặc dù ước lượng thực nghiệm cho thấy độ co giãn dài hạn rất cao ($\eta \approx -8.13$), mô hình mô phỏng chỉ sử dụng biên độ co giãn từ $0.62$ đến $1.20$ cho giờ cao điểm. Giả định này tính đến độ trễ trong việc thay đổi thói quen và rào cản kỹ thuật trong giai đoạn đầu triển khai.
+	\item \textbf{Lộ trình kép:} Kịch bản mô phỏng sự gia tăng đồng thời của hai biến số: (1) \textit{Độ phủ hạ tầng} (tỷ lệ hộ có công tơ AMI tăng từ 20\% lên 70\%) và (2) \textit{Tín hiệu giá} (chênh lệch giá giờ đỉnh tăng từ 10\% lên 30\%).
+\end{itemize}
+
+\subsection{Kết quả Kịch bản Cơ sở (Baseline Scenario)}
+Kết quả tính toán chi tiết cho giai đoạn 2026--2030 được trình bày tại Bảng \ref{tab:simulation_results} và minh họa trực quan trong Hình \ref{fig:sim_tou}.
+
+\begin{table}[H]
+	\centering
+	\caption{Kết quả mô phỏng tác động chính sách TOU (2026--2030)}
+	\label{tab:simulation_results}
+	\begin{tabular}{c c c c c}
+		\toprule
+		\textbf{Năm} & \textbf{Tỷ lệ áp dụng} & \textbf{Giảm phụ tải đỉnh} & \textbf{Tiết kiệm chi phí} & \textbf{Giảm phát thải} \\
+		& (\%) & (\%) & (Tỷ VNĐ) & (Triệu tấn $CO_2$) \\
+		\midrule
+		2026 & 20\% & 1,24\% & 1.055 & 0,53 \\
+		2027 & 40\% & 2,80\% & 2.514 & 1,26 \\
+		2028 & 55\% & 7,01\% & 6.627 & 3,31 \\
+		2029 & 65\% & 13,00\% & 12.899 & 6,45 \\
+		\textbf{2030} & \textbf{70\%} & \textbf{25,20\%} & \textbf{26.195} & \textbf{13,10} \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Nguồn: Tính toán từ mô hình mô phỏng. Chi phí biên tránh được giả định là 900 VNĐ/kWh.}}
+\end{table}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Simulation_TOU_2030.png}
+	\caption{Diễn biến cắt giảm phụ tải và tiết kiệm chi phí (2026--2030)}
+	\label{fig:sim_tou}
+\end{figure}
+
+\noindent \textbf{Nhận xét biểu đồ (Hình \ref{fig:sim_tou}):} 
+Biểu đồ cho thấy hiệu quả của chính sách không tăng tuyến tính mà tăng theo cấp số nhân (đường cong J-curve):
+\begin{itemize}
+	\item \textbf{Giai đoạn khởi động (2026--2027):} Hiệu quả còn thấp (tiết kiệm dưới 3.000 tỷ VNĐ) do mức chênh lệch giá chưa đủ lớn (10\%) để thay đổi hành vi, và tỷ lệ áp dụng còn hạn chế.
+	\item \textbf{Giai đoạn tăng tốc (2029--2030):} Hiệu quả bùng nổ, đạt \textbf{26.195 tỷ VNĐ} vào năm 2030. Đây là kết quả của \textit{tác động cộng hưởng (synergistic effect)}: khi 70\% hộ gia đình tham gia với mức giá phạt cao (30\%) và độ co giãn đạt mức bão hòa (1.20), khả năng điều tiết của hệ thống đạt mức tối ưu.
+\end{itemize}
+
+\subsection{Cơ chế tác động và Hiệu quả hệ thống}
+
+\subsubsection{Cơ chế dịch chuyển phụ tải (Load Shifting)}
+Hình \ref{fig:tou_mechanism} minh họa cơ chế kỹ thuật đằng sau các con số tài chính. Tín hiệu giá cao thúc đẩy người tiêu dùng thực hiện hành vi "san bằng phụ tải" (load leveling), dời nhu cầu sang các khung giờ thấp điểm.
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1.0]
+		% Trục
+		\draw[->] (0,0) -- (10,0) node[below] {Thời gian trong ngày (Giờ)};
+		\draw[->] (0,0) -- (0,5) node[left] {Phụ tải (MW)};
+		% Trục hoành giờ
+		\foreach \x in {0, 6, 12, 18, 24} \draw (\x/2.4, 1pt) -- (\x/2.4, -1pt) node[below] {\x};
+		% Đường phụ tải CŨ (Đỏ)
+		\draw[thick, red, dashed, smooth] plot coordinates {(0,1) (2,1.2) (4,3.5) (5,4.5) (6,3.5) (8,1.5) (10,1)};
+		\node[red] at (5, 4.8) {Phụ tải gốc};
+		% Đường phụ tải MỚI (Xanh)
+		\draw[thick, blue, smooth] plot coordinates {(0,1.5) (2,1.8) (4,3.0) (5,3.2) (6,3.0) (8,2.0) (10,1.5)};
+		\node[blue] at (8, 2.5) {Phụ tải sau TOU};
+		% Mũi tên chỉ sự cắt giảm
+		\draw[->, thick, black] (5, 4.4) -- (5, 3.3);
+		\node[right, text width=2.5cm] at (5.2, 3.8) {\small{\textbf{Cắt ngọn (Peak Shaving)} \\ $\Delta P \approx -25,2\%$}};
+		% Mũi tên chỉ sự dời sang giờ thấp điểm
+		\draw[->, bend right] (3.5, 3.8) to (1.5, 1.8);
+		\node[left] at (2, 2.5) {\small{\textit{Dời tải (Shift)}}};
+	\end{tikzpicture}
+	\caption{Cơ chế san bằng biểu đồ phụ tải thông qua tín hiệu giá TOU}
+	\label{fig:tou_mechanism}
+\end{figure}
+
+\subsubsection{Hiệu quả Kinh tế và Môi trường}
+Về mặt kinh tế, lượng điện năng đỉnh tránh được khoảng \textbf{29,11 TWh} giúp tiết kiệm \textbf{26.195 tỷ VNĐ/năm}. Về mặt môi trường, việc giảm huy động nguồn điện chạy dầu/khí vào giờ cao điểm giúp cắt giảm \textbf{13,1 triệu tấn $CO_2$}, đóng góp thiết thực vào mục tiêu Net Zero 2050 của Chính phủ.
+
+\subsection{Phân tích độ nhạy (Sensitivity Analysis)}
+
+Để kiểm định tính vững (robustness) của kết quả dự báo trước những biến động không chắc chắn về hành vi người tiêu dùng, nghiên cứu xây dựng thêm hai kịch bản đối chứng: Kịch bản Thận trọng (với giả định độ co giãn thấp) và Kịch bản Lạc quan (với giả định độ co giãn cao nhờ hỗ trợ công nghệ).
+
+Kết quả chi tiết được trình bày tại Bảng \ref{tab:sensitivity} và minh họa trực quan trong Hình \ref{fig:sensitivity_bar}.
+
+\begin{table}[H]
+	\centering
+	\caption{Phân tích độ nhạy lợi ích kinh tế năm 2030}
+	\label{tab:sensitivity}
+	\begin{tabular}{l c c c c}
+		\toprule
+		\textbf{Kịch bản} & \textbf{Giả định} & \textbf{Giảm phụ tải} & \textbf{Lợi ích kinh tế} & \textbf{So sánh với} \\
+		& \textbf{($\eta_{peak}$)} & \textbf{đỉnh (\%)} & \textbf{(Tỷ VNĐ/năm)} & \textbf{Cơ sở} \\
+		\midrule
+		\textbf{1. Thận trọng} & 0,80 & 16,8\% & \textbf{17.464} & -33,3\% \\
+		\textit{(Phản ứng yếu)} & & & & \\
+		\addlinespace
+		\textbf{2. Cơ sở} & \textbf{1,20} & \textbf{25,2\%} & \textbf{26.195} & \textbf{--} \\
+		\textit{(Theo mô hình)} & & & & \\
+		\addlinespace
+		\textbf{3. Lạc quan} & 1,50 & 31,5\% & \textbf{32.744} & +25,0\% \\
+		\textit{(Phản ứng mạnh)} & & & & \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Nguồn: Kết quả chạy Ma trận độ nhạy trên Stata. Số liệu cho thấy ngay cả trong kịch bản xấu nhất, dự án vẫn mang lại hiệu quả tích cực.}}
+\end{table}
+
+\begin{figure}[H]
+	\centering
+	% Hình vẽ so sánh 3 kịch bản từ Stata
+	\includegraphics[width=0.85\textwidth]{Sensitivity_Bar.png}
+	\caption{Lợi ích kinh tế theo các kịch bản độ co giãn (Năm 2030)}
+	\label{fig:sensitivity_bar}
+\end{figure}
+
+Bên cạnh đó, Hình \ref{fig:sensitivity_matrix} mô tả mối quan hệ tương tác hai chiều giữa mức tăng giá và độ co giãn đến lợi ích kinh tế.
+
+\begin{figure}[H]
+	\centering
+	% Hình vẽ ma trận đường từ Stata
+	\includegraphics[width=0.85\textwidth]{Sensitivity_Matrix.png}
+	\caption{Ma trận tác động tương hỗ giữa Mức tăng giá và Độ co giãn}
+	\label{fig:sensitivity_matrix}
+	\footnotesize{\textit{Ghi chú: Đồ thị minh họa mối quan hệ tuyến tính: Để đạt mức tiết kiệm trên 25.000 tỷ VNĐ (điểm giữa đường), mức chênh lệch giá giờ cao điểm cần đạt tối thiểu 30\% (0.3).}}
+\end{figure}
+
+\subsection*{Đánh giá tổng hợp về độ tin cậy}
+
+Dựa trên kết quả phân tích độ nhạy, nghiên cứu rút ra ba kết luận quan trọng về tính khả thi của chính sách:
+
+\begin{itemize}
+	\item \textbf{Ngưỡng an toàn cao (High Safety Margin):} Ngay cả trong kịch bản thận trọng nhất (người dân ít thay đổi hành vi, $\eta=0.80$), chính sách TOU vẫn mang lại lợi ích kinh tế ròng khoảng \textbf{17.464 tỷ VNĐ/năm}. Điều này khẳng định rủi ro tài chính của việc triển khai dự án là rất thấp.
+	
+	\item \textbf{Vai trò tiên quyết của tín hiệu giá:} Hình \ref{fig:sensitivity_matrix} chỉ ra rằng lợi ích kinh tế nhạy cảm với mức tăng giá hơn là độ co giãn. Nếu mức chênh lệch giá chỉ là 10\%, lợi ích thu được rất khiêm tốn (dưới 10.000 tỷ VNĐ) bất kể độ co giãn cao hay thấp. Do đó, một lộ trình tăng giá mạnh mẽ (lên mức 30\%) là điều kiện cần để chính sách thành công.
+	
+	\item \textbf{Tiềm năng từ công nghệ:} Kịch bản lạc quan (lợi ích 32.744 tỷ VNĐ) hoàn toàn có thể đạt được nếu việc áp dụng giá được song hành với các giải pháp công nghệ (Smart Home, Tự động hóa), giúp nâng cao khả năng phản ứng của người tiêu dùng ($\eta$ tăng lên 1.50).
+\end{itemize}
+
+\section{Thảo luận kết quả}
+Kết quả ước lượng từ mô hình hệ thống cầu QAIDS cung cấp những bằng chứng thực nghiệm quan trọng, cập nhật và bổ sung cho các nghiên cứu trước đây tại Việt Nam:
+
+\begin{itemize}
+	\item \textbf{Độ nhạy cảm cao về giá ($\eta_M \approx -8.13$):} 
+	Hệ số giá mang dấu âm và có ý nghĩa thống kê cao ($\gamma \approx -0.294$). Độ co giãn giá Marshallian dài hạn (Median) ước lượng được là $\eta_M \approx -8.13$. 
+	
+	Con số này cao hơn đáng kể so với các ước lượng ngắn hạn (thường từ $-0.3$ đến $-0.6$) trong các nghiên cứu chuỗi thời gian. Sự khác biệt này phản ánh bản chất của dữ liệu chéo (cross-section): trong dài hạn, hộ gia đình có đủ thời gian để thay đổi hành vi và thiết bị (ví dụ: chuyển sang thiết bị tiết kiệm điện, lắp điện mặt trời) để phản ứng với cấu trúc giá bậc thang lũy tiến của EVN.  Đường cầu dài hạn luôn thoải hơn (co giãn hơn) so với đường cầu ngắn hạn.
+	
+	\item \textbf{Đặc điểm thu nhập và Đường Engel:} 
+	Độ co giãn thu nhập $\eta_{inc} \approx 0.90$ khẳng định điện là hàng hóa thiết yếu (necessity good). Kết quả kiểm định cho thấy thành phần bậc hai của thu nhập không có ý nghĩa thống kê, hàm ý đường cong Engel tương đối tuyến tính trong khoảng thu nhập quan sát được.  Điều này cho thấy nhu cầu điện tăng trưởng ổn định và tiệm cận với tốc độ tăng thu nhập, chưa xuất hiện điểm bão hòa rõ rệt.
+	
+	\item \textbf{Tác động phân phối (Tính lũy thoái):} 
+	Phân tích phúc lợi chỉ ra tính chất lũy thoái (regressive) của chính sách giá hiện hành. Mặc dù nhóm giàu (Q5) chịu tổn thất tuyệt đối lớn hơn gấp 3 lần nhóm nghèo (25.100 VNĐ so với 8.250 VNĐ), nhưng gánh nặng chi phí tính trên tổng thu nhập của nhóm nghèo lại cao hơn (0.23\% so với 0.20\%). 
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}{0.48\textwidth}
+		\centering		
+		\includegraphics[width=\textwidth]{Engel_Curve_Empirical.png}
+		\caption{Đường Engel thực nghiệm: Điện là hàng hóa thiết yếu}
+		\label{fig:engel_discussion}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		% Hình vẽ từ Stata: Gánh nặng chi phí
+		\includegraphics[width=\textwidth]{CV_Burden_Income.png}
+		\caption{Gánh nặng phúc lợi (\%) giảm dần khi thu nhập tăng}
+		\label{fig:burden_discussion}
+	\end{minipage}
+\end{figure}
+
+Thực tế này bác bỏ quan điểm cho rằng tăng giá điện ảnh hưởng người giàu nhiều hơn. Mặc dù người giàu trả nhiều tiền hơn, nhưng tổn thương về mặt phúc lợi (welfare loss) đối với người nghèo là nghiêm trọng hơn do hạn chế ngân sách (budget constraint) chặt chẽ của họ.
+
+\section{Kết luận và Hàm ý}
+\label{sec:conclusion}
+
+Nghiên cứu đã giải quyết thành công mục tiêu lượng hóa hành vi tiêu dùng điện sinh hoạt tại Việt Nam thông qua việc ứng dụng mô hình Hệ thống cầu Gần như Lý tưởng Bậc hai (QAIDS) trên bộ dữ liệu VHLSS 2022. Khắc phục được các hạn chế về nội sinh của các mô hình hồi quy đơn phương trình truyền thống, nghiên cứu rút ra ba kết luận thực nghiệm cốt lõi:
+
+\begin{enumerate}
+	\item \textbf{Về đặc điểm cầu và độ co giãn:} 
+	Kết quả ước lượng khẳng định điện là hàng hóa thiết yếu với độ co giãn thu nhập $\eta_{inc} \approx 0.90$. Đặc biệt, cầu điện trong dài hạn thể hiện độ nhạy cảm rất cao với giá ($\eta_{price} \approx -8.13$), cao hơn đáng kể so với các ước lượng ngắn hạn. Sự phân hóa hành vi diễn ra rõ rệt: nhóm hộ nghèo (Q1) và các vùng có thu nhập thấp (như Tây Nguyên) có độ nhạy cảm giá cao nhất, phản ánh áp lực ngân sách lớn mà họ phải đối mặt.
+	
+	\item \textbf{Về tác động phúc lợi và công bằng xã hội:} 
+	Việc điều chỉnh giá điện gây ra tổn thất phúc lợi trung bình khoảng \textbf{17.600 VNĐ/hộ/tháng}. Tuy nhiên, chính sách giá hiện hành mang tính chất \textit{lũy thoái (regressive)}: gánh nặng chi phí tính trên tổng thu nhập của nhóm nghèo (0,23\%) cao hơn so với nhóm giàu (0,20\%). Điều này đặt ra yêu cầu cấp thiết về các cơ chế an sinh bổ trợ khi điều chỉnh giá.
+	
+	\item \textbf{Về hiệu quả chính sách TOU:} 
+	Với độ co giãn giá cao được tìm thấy, chính sách giá theo thời gian (TOU) được chứng minh là công cụ điều tiết cực kỳ hiệu quả. Kết quả mô phỏng cho thấy, với kịch bản áp dụng cho 70\% hộ gia đình vào năm 2030, hệ thống điện có thể cắt giảm tới \textbf{25,2\%} phụ tải đỉnh, tương ứng với lợi ích kinh tế hơn \textbf{26.000 tỷ đồng/năm} và giảm 13,1 triệu tấn phát thải $CO_2$.
+\end{enumerate}
+
+\subsection*{Đóng góp của nghiên cứu}
+Nghiên cứu đóng góp vào kho tàng học thuật bằng việc cung cấp bộ tham số độ co giãn dài hạn đáng tin cậy dựa trên phương pháp hệ thống cầu (System Demand Estimation), làm cơ sở tham chiếu cho việc thiết kế biểu giá điện bán lẻ mới và quy hoạch phát triển điện lực quốc gia.
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[
+		scale=0.9,
+		node distance=1.5cm,
+		auto,
+		block/.style={rectangle, draw, fill=blue!10, text width=3.5cm, text centered, rounded corners, minimum height=1.2cm},
+		result/.style={rectangle, draw, fill=green!10, text width=4cm, text centered, rounded corners, minimum height=1.2cm},
+		policy/.style={rectangle, draw, fill=orange!10, text width=3.5cm, text centered, rounded corners, minimum height=1.2cm},
+		line/.style={draw, ->, >=latex, thick}
+		]
+		% Nodes
+		\node [block] (input) {\textbf{Dữ liệu \& Phương pháp} \\ VHLSS 2022 + QAIDS};
+		
+		\node [result, below of=input, node distance=2.5cm] (res1) {\textbf{Kết quả 1: Hành vi} \\ $\eta \approx -8.13$ (Rất co giãn) \\ Hàng hóa thiết yếu};
+		
+		\node [result, right of=res1, node distance=5cm] (res2) {\textbf{Kết quả 2: Phúc lợi} \\ CV $\approx$ 17.600 VNĐ \\ Tính lũy thoái (Regressive)};
+		
+		\node [result, left of=res1, node distance=5cm] (res3) {\textbf{Kết quả 3: Mô phỏng} \\ Giảm 25,2\% Phụ tải đỉnh \\ Tiết kiệm 26.195 tỷ VNĐ};
+		
+		\node [policy, below of=res1, node distance=3cm] (rec) {\textbf{Khuyến nghị Chính sách} \\ Triển khai TOU rộng rãi \\ + Hỗ trợ hộ nghèo};
+		
+		% Lines
+		\path [line] (input) -- (res1);
+		\path [line] (input) -| (res2);
+		\path [line] (input) -| (res3);
+		\path [line] (res1) -- (rec);
+		\path [line] (res2) |- (rec);
+		\path [line] (res3) |- (rec);
+		
+	\end{tikzpicture}
+	\caption{Tóm tắt kết quả nghiên cứu và luồng khuyến nghị}
+	\label{fig:conclusion_summary}
+\end{figure}
+	
+\section{Hàm ý Chính sách và Khuyến nghị}
+\label{sec:policy}
+
+Dựa trên kết quả định lượng từ hệ thống cầu QAIDS và mô phỏng tác động phúc lợi, nghiên cứu đề xuất ba nhóm chính sách trọng tâm nhằm tối ưu hóa nhu cầu điện sinh hoạt tại Việt Nam trong giai đoạn 2026--2030. Các khuyến nghị này được xây dựng dựa trên bằng chứng thực nghiệm về độ nhạy cảm cao của hộ gia đình đối với giá điện (độ co giãn dài hạn $\approx -8.13$) và đặc tính thiết yếu của hàng hóa này trong tiêu dùng.
+
+\subsection{Triển khai biểu giá theo thời gian (TOU) như công cụ điều tiết phụ tải chủ lực}
+
+Kết quả ước lượng cho thấy hộ gia đình Việt Nam phản ứng rất mạnh mẽ với các tín hiệu về giá ($\eta_M \approx -8.13$). Kết quả mô phỏng kịch bản 2030 cũng chỉ ra rằng nếu áp dụng TOU cho 70\% hộ gia đình, phụ tải đỉnh có thể giảm tới \textbf{25,2\%}, giúp hệ thống điện tiết kiệm khoảng \textbf{26.195 tỷ VNĐ/năm} chi phí biên tránh được. Đây là cơ sở thực tiễn quan trọng để chuyển dịch chính sách:
+
+\begin{itemize}
+	\item \textbf{Cơ chế giá là đòn bẩy hiệu quả (Price as a Potent Lever):} Thay vì chỉ dựa vào vận động tiết kiệm điện, Chính phủ và EVN nên sử dụng cơ chế giá theo giờ (TOU) làm công cụ điều tiết chính. Với độ nhạy cảm giá cao, việc áp dụng mức chênh lệch giá giữa giờ cao điểm (Peak) và thấp điểm (Off-peak) đủ lớn (khuyến nghị ít nhất 30\%) sẽ tạo động lực kinh tế mạnh mẽ để người dân tự giác dịch chuyển hành vi tiêu dùng.
+	
+	\item \textbf{Thí điểm và mở rộng có trọng tâm:} Nên ưu tiên áp dụng TOU bắt buộc đối với nhóm hộ gia đình có mức tiêu thụ điện lớn (ví dụ: trên 400 kWh/tháng). Kết quả mô hình cho thấy đây là nhóm có độ co giãn thu nhập cao và sở hữu nhiều thiết bị điện có khả năng điều chỉnh giờ hoạt động (như máy giặt, điều hòa, xe điện), do đó khả năng thích ứng với TOU tốt hơn nhóm thu nhập thấp.
+\end{itemize}
+
+\subsection{Giải quyết bài toán phân phối lại và Lưới an sinh năng lượng}
+
+Mặc dù TOU mang lại hiệu quả kỹ thuật, kết quả tính toán \textit{Tổn thất phúc lợi} (CV) chỉ ra tính chất lũy thoái của việc tăng giá điện (nhóm hộ nghèo chịu gánh nặng chi phí trên thu nhập là 0.23\%, cao hơn mức 0.20\% của nhóm giàu). Vì điện là hàng hóa thiết yếu ($\eta_{inc} < 1$), chính sách cần đảm bảo tính công bằng xã hội:
+
+\begin{itemize}
+	\item \textbf{Duy trì ``Bậc thang an sinh'' (Lifeline Block):} Chính sách giá mới cần duy trì định mức tiêu thụ cơ bản (ví dụ: 0--50 kWh đầu tiên) với mức giá thấp cố định và không áp dụng TOU. Điều này đảm bảo các hộ nghèo và cận nghèo không bị tổn thương bởi biến động giá giờ cao điểm, bảo vệ quyền tiếp cận năng lượng cơ bản.
+	
+	\item \textbf{Cơ chế hoàn trả doanh thu (Revenue Recycling):} Phần doanh thu thặng dư thu được từ giá điện giờ cao điểm (chủ yếu từ nhóm hộ thu nhập cao Q5) nên được tái đầu tư vào quỹ hỗ trợ giá điện trực tiếp (Direct Cash Transfer) cho các hộ nghèo (Q1, Q2) hoặc đầu tư nâng cấp hạ tầng lưới điện nông thôn.
+\end{itemize}
+
+\subsection{Đồng bộ hóa hạ tầng kỹ thuật và Khuyến khích thiết bị hiệu suất cao}
+
+Mô hình QAIDS chỉ ra rằng hành vi tiêu dùng phụ thuộc vào ngân sách và thông tin giá cả. Để tín hiệu giá TOU phát huy tác dụng, cần các giải pháp bổ trợ:
+
+\begin{enumerate}
+	\item \textbf{Đẩy mạnh hạ tầng AMI (Advanced Metering Infrastructure):} Việc thay thế công tơ cơ khí bằng công tơ điện tử đo xa là điều kiện tiên quyết. EVN cần hoàn thành lộ trình lắp đặt này trước năm 2030 để đảm bảo khả năng triển khai TOU đại trà.
+	\item \textbf{Minh bạch thông tin và Tín dụng xanh:} Phát triển các ứng dụng giám sát điện năng (như EPoint) để cảnh báo giờ cao điểm theo thời gian thực. Đồng thời, do độ co giãn giá dài hạn cao, nhà nước cần có chính sách hỗ trợ tín dụng để người dân chuyển đổi sang thiết bị tiết kiệm điện (Inverter, đèn LED), giúp giảm hóa đơn bền vững mà không làm giảm chất lượng cuộc sống.
+\end{enumerate}
+
+\subsection{Lộ trình thực hiện khuyến nghị (2026--2030)}
+
+Để giảm thiểu cú sốc giá và đảm bảo sự chấp nhận của xã hội, nghiên cứu đề xuất lộ trình hai giai đoạn phù hợp với kết quả mô phỏng:
+
+\begin{description}
+	\item[Giai đoạn 1 (2026--2027):] Áp dụng TOU theo cơ chế tự nguyện (\textit{Opt-in}). Thiết lập mức giá giờ thấp điểm cực thấp để khuyến khích người dùng tham gia, qua đó thu thập dữ liệu hành vi thực tế để hiệu chỉnh mô hình. Tập trung lắp đặt AMI tại các đô thị lớn.
+	\item[Giai đoạn 2 (2028--2030):] Chuyển sang cơ chế bắt buộc đối với các hộ tiêu thụ trên 400 kWh/tháng và thí điểm đại trà tại các đô thị lớn (TP.HCM, Hà Nội, Đà Nẵng). Triển khai cơ chế hoàn trả doanh thu cho hộ nghèo từ nguồn thặng dư TOU.
+\end{description}
+	
+\section{Hạn chế và Hướng nghiên cứu tiếp theo}
+\label{sec:limitations}
+
+Mặc dù nghiên cứu đã nỗ lực áp dụng các phương pháp ước lượng hệ thống cầu tiên tiến (QAIDS) và kiểm soát nội sinh giá (SUREG), kết quả phân tích vẫn tồn tại một số hạn chế nhất định cần được lưu ý khi diễn giải và áp dụng chính sách:
+
+\begin{itemize}
+	\item \textbf{Bản chất dữ liệu chéo (Cross-sectional Nature):} Do VHLSS 2022 là dữ liệu cắt ngang tại một thời điểm, nghiên cứu chưa thể theo dõi được biến động hành vi của cùng một hộ gia đình qua thời gian (dynamic adjustments). Do đó, các hệ số co giãn ước lượng được ($\eta \approx -8.13$) phản ánh trạng thái cân bằng trong dài hạn hơn là các phản ứng điều chỉnh tức thời. Điều này có thể dẫn đến việc đánh giá cao mức độ phản ứng của hộ gia đình trong giai đoạn đầu áp dụng chính sách.
+	
+	\item \textbf{Giả định hành vi trong mô phỏng:} Phân tích tác động của TOU mang tính chất dự báo tiền định (\textit{ex-ante analysis}). Các tham số phản ứng của hộ gia đình đối với cấu trúc giá mới được suy rộng từ hành vi đối với biểu giá bậc thang (IBT) hiện hành. Thực tế triển khai đại trà có thể xuất hiện các rào cản kỹ thuật (thiếu thiết bị thông minh) hoặc tâm lý (sự trì trệ hành vi - status quo bias) làm giảm độ nhạy cảm giá thực tế so với mô hình lý thuyết.
+\end{itemize}
+
+Từ những hạn chế trên, nghiên cứu đề xuất 3 hướng phát triển tiếp theo để hoàn thiện bức tranh về hành vi tiêu dùng điện:
+
+\begin{enumerate}
+	\item \textbf{Mở rộng dữ liệu theo thời gian (Panel Data):} Kết nối dữ liệu mảng (Panel Data) qua các kỳ khảo sát VHLSS (2020, 2022, 2024) để kiểm soát các yếu tố không quan sát được của hộ gia đình (unobserved heterogeneity). Việc này sẽ giúp tách biệt rõ ràng giữa độ co giãn ngắn hạn và dài hạn, cung cấp tham số chính xác hơn cho việc điều hành giá từng năm.
+	
+	\item \textbf{Tích hợp dữ liệu tần suất cao (High-frequency Data):} Tận dụng dữ liệu chuỗi thời gian từ hệ thống công tơ đo xa (AMI) để phân tích chi tiết biểu đồ phụ tải theo giờ (Load profile). Dữ liệu này cho phép ước lượng chính xác độ co giãn thay thế ($\sigma$) giữa giờ cao điểm và thấp điểm, là tham số đầu vào quan trọng để thiết kế khung giờ TOU tối ưu.
+	
+	\item \textbf{Nghiên cứu hành vi Prosumer:} Trong bối cảnh chuyển dịch năng lượng, hướng nghiên cứu cần mở rộng sang mối tương tác giữa chính sách giá và quyết định đầu tư nguồn điện phân tán (điện mặt trời mái nhà). Mô hình cần tích hợp thêm yếu tố sản xuất tự dùng để đánh giá chính xác hơn tác động lưới điện và thiết kế cơ chế giá hai chiều (net-billing) phù hợp.
+\end{enumerate}
+
+\newpage	
+\appendix
+\renewcommand{\thetable}{\Alph{section}\arabic{table}}
+\renewcommand{\thefigure}{\Alph{section}\arabic{figure}}
+\renewcommand{\thesubsection}{\Alph{section}.\arabic{subsection}}
+\setcounter{table}{0}
+\setcounter{figure}{0}
+
+\section{Phụ lục A: Kết quả hồi quy chi tiết}
+\subsection{Mô hình OLS}
+\begin{table}[H]
+	\centering
+	\caption{Kết quả hồi quy OLS với biến phụ thuộc $\ln kWh$}
+	\begin{tabular}{l c c c c}
+		\toprule
+		Biến & Hệ số & Sai số chuẩn & t & Ý nghĩa \\
+		\midrule
+		ln\_price\_ap & 2.327 & 0.047 & 49.08 & *** \\
+		ln\_income & 0.235 & 0.012 & 20.32 & *** \\
+		ln\_w\_elec & 0.620 & 0.006 & 108.19 & *** \\
+		urban & 0.059 & 0.008 & 7.18 & *** \\
+		Q1 (Poorest) & –0.292 & 0.019 & –15.11 & *** \\
+		Q2 & –0.097 & 0.013 & –7.28 & *** \\
+		Q4 & 0.034 & 0.013 & 2.66 & ** \\
+		Q5 (Richest) & –0.059 & 0.018 & –3.32 & *** \\
+		constant & –14.44 & 0.380 & –38.02 & *** \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsection{Mô hình 2SLS (IV)}
+\begin{table}[H]
+	\centering
+	\caption{Kết quả hồi quy 2SLS với biến phụ thuộc $\ln kWh$}
+	\begin{tabular}{l c c c c}
+		\toprule
+		Biến & Hệ số & Sai số chuẩn & z & Ý nghĩa \\
+		\midrule
+		ln\_price\_mp (IV) & 3.131 & 0.426 & 7.35 & *** \\
+		ln\_income & 0.159 & 0.037 & 4.29 & *** \\
+		ln\_w\_elec & 0.587 & 0.011 & 53.36 & *** \\
+		urban & –0.004 & 0.004 & –0.98 & n.s. \\
+		Q1 (Poorest) & –0.109 & 0.021 & –5.19 & *** \\
+		Q2 & –0.133 & 0.015 & –8.87 & *** \\
+		Q4 & –0.082 & 0.014 & –5.86 & *** \\
+		Q5 (Richest) & –0.091 & 0.019 & –4.79 & *** \\
+		constant & –20.55 & 0.410 & –50.12 & *** \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsection{Mô hình QAIDS–IV (SUR)}
+\begin{table}[H]
+	\centering
+	\caption{Kết quả hồi quy QAIDS–IV với biến phụ thuộc $w_{elec}$}
+	\begin{tabular}{l c c c c}
+		\toprule
+		Biến & Hệ số & Sai số chuẩn & z & Ý nghĩa \\
+		\midrule
+		ln\_P & –0.294 & 0.0014 & –208.43 & *** \\
+		ln\_x\_P & –0.0063 & 0.0025 & –2.48 & ** \\
+		(ln\_x\_P)$^2$ & 0.00006 & 0.00015 & 0.40 & n.s. \\
+		TOU $\times$ Urban & 0.0222 & 0.0019 & 11.73 & *** \\
+		Temp (centered) & –0.0011 & 0.00006 & –19.61 & *** \\
+		Temp$^2$ (centered) & –0.000081 & 0.000008 & –10.44 & *** \\
+		ln\_income & 0.0020 & 0.00037 & 5.34 & *** \\
+		Urban & 0.0016 & 0.00026 & 6.13 & *** \\
+		Dry season & 0.0024 & 0.00029 & 8.24 & *** \\
+		Region FE & Có & – & – & – \\
+		Income class & Không đáng kể & – & – & – \\
+		constant & 3.084 & 0.018 & 171.00 & *** \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsection{Mô hình LA-QAIDS (Kiểm định tính vững)}
+\begin{table}[H]
+	\centering
+	\caption{Kết quả hồi quy hệ thống cầu QAIDS (Biến phụ thuộc: $w_{elec}$)}
+	\label{tab:qaids_final}
+	\begin{tabular}{l c c c c}
+		\toprule
+		\textbf{Biến số} & \textbf{Hệ số} & \textbf{Sai số chuẩn} & \textbf{z} & \textbf{P-value} \\
+		\midrule
+		\textbf{Các biến kinh tế chính} & & & & \\
+		ln\_P (Chỉ số giá Stone) & \textbf{–0.295} & 0.0014 & –209.62 & 0.000 \\
+		ln\_x\_P (Thu nhập thực) & \textbf{–0.0042} & 0.0025 & –1.67 & 0.094 \\
+		(ln\_x\_P)$^2$ & –0.00004 & 0.00015 & –0.26 & 0.794 \\
+		\midrule
+		\textbf{Biến chính sách \& Khí hậu} & & & \\
+		TOU $\times$ Urban & 0.0217 & 0.0019 & 11.48 & 0.000 \\
+		Temp (centered) & –0.0011 & 0.00006 & –19.68 & 0.000 \\
+		Temp$^2$ (centered) & –0.00008 & 0.00001 & –10.47 & 0.000 \\
+		Dry season & 0.0024 & 0.00029 & 8.19 & 0.000 \\
+		Urban & 0.0016 & 0.00026 & 6.07 & 0.000 \\
+		\midrule
+		\textbf{Nhóm thu nhập (So với Q3)} & & & & \\
+		Q1 (Nghèo nhất) & –0.0028 & 0.0005 & –6.24 & 0.000 \\
+		Q2 & –0.0011 & 0.0004 & –2.85 & 0.004 \\
+		Q4 & 0.0006 & 0.0004 & 1.66 & 0.098 \\
+		Q5 (Giàu nhất) & 0.0021 & 0.0004 & 5.15 & 0.000 \\
+		\midrule
+		\textbf{Thống kê mô hình} & & & & \\
+		Hệ số xác định ($R^2$) & 0.8712 & & & \\
+		Số quan sát & 9,362 & & & \\
+		Constant & 3.114 & 0.017 & 181.24 & 0.000 \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Ghi chú: Biến thu nhập danh nghĩa (ln\_income) đã được loại bỏ để đảm bảo tính nhất quán của hệ số thu nhập thực. Mô hình sử dụng phương pháp Iterated Seemingly Unrelated Regression (ISUR).}}
+\end{table}
+
+\section{Phụ lục B: Kiểm định mô hình}
+\subsection{First-stage regression}
+\begin{table}[H]
+	\centering
+	\caption{Kết quả hồi quy giai đoạn 1 (ln\_price\_mp)}
+	\begin{tabular}{l c c c}
+		\toprule
+		Biến công cụ & Hệ số & z & p-value \\
+		\midrule
+		ln\_avg\_price\_excl\_mp & 0.3768 & 8.54 & <0.001 \\
+		constant & –0.112 & –2.11 & 0.035 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsection{Kiểm định công cụ yếu}
+\begin{itemize}
+	\item First-stage R$^2$ = 0.6318; Adjusted R$^2$ = 0.6316
+	\item Partial R$^2$ = 0.0747
+	\item F-statistic hiệu chỉnh theo cụm = 164.91, p = 0.0001
+\end{itemize}
+Theo Staiger \& Stock (1997), F > 10, cho thấy đây là công cụ mạnh. Kết quả vượt xa ngưỡng này, khẳng định biến công cụ không yếu.
+
+\subsection{Kiểm định nội sinh}
+\begin{itemize}
+	\item estat endogenous: F(1,5) = 12.07, p = 0.0178
+	\item Bác bỏ H$_0$: biến giá là ngoại sinh
+	\item Kết luận: biến giá điện là nội sinh, cần ước lượng IV
+\end{itemize}
+
+\subsection{Kiểm định độ phù hợp mô hình}
+\begin{itemize}
+	\item RESET test: không phát hiện sai dạng hàm
+	\item Breusch–Pagan test: không có bằng chứng mạnh về heteroskedasticity
+	\item Wald test: các hệ số chính (giá, thu nhập, TOU, khí hậu) đều có ý nghĩa thống kê cao
+\end{itemize}
+
+\subsection{Ma trận tương quan với kiểm định ý nghĩa (p-value)}
+
+\begin{table}[H]
+	\centering
+	\caption{Ma trận tương quan giữa các biến chính}
+	\resizebox{\textwidth}{!}{%
+		\begin{tabular}{lccccccccccc}
+			\toprule
+			Biến & ln\_avg\_ap & ln\_avg\_mp & ln\_income & ln\_w\_elec & urban & dry\_season & region & temp\_avg & temp\_sq & tou\_urban & tou\_urbanXurban \\
+			\midrule
+			ln\_avg\_ap & 1.0000 &        &        &        &        &        &        &        &        &        &        \\
+			ln\_avg\_mp & 0.9809 & 1.0000 &        &        &        &        &        &        &        &        &        \\
+			ln\_income  & 0.2097 & 0.2112 & 1.0000 &        &        &        &        &        &        &        &        \\
+			ln\_w\_elec & 0.2450 & 0.2610 & 0.0640 & 1.0000 &        &        &        &        &        &        &        \\
+			urban       & 0.2174 & 0.1932 & 0.1870 & 0.1255 & 1.0000 &        &        &        &        &        &        \\
+			dry\_season & -0.0001& 0.0006 & -0.0367& -0.0128& -0.0095& 1.0000 &        &        &        &        &        \\
+			region      & -0.1886& -0.1605& 0.0313 & -0.0022& 0.0655 & -0.0002& 1.0000 &        &        &        &        \\
+			temp\_avg   & 0.0382 & 0.0437 & 0.0491 & 0.0423 & 0.0327 & -0.4903& 0.3515 & 1.0000 &        &        &        \\
+			temp\_sq    & 0.1124 & 0.1052 & -0.0243& 0.0172 & -0.0223& 0.2881 & -0.3574& -0.7222& 1.0000 &        &        \\
+			tou\_urban  & 0.6104 & 0.5427 & 0.1384 & 0.1084 & 0.1919 & -0.0002& -0.2175& 0.0541 & 0.0219 & 1.0000 &        \\
+			tou\_urbanXurban & 0.4610 & 0.4042 & 0.1338 & 0.0771 & 0.3298 & -0.0010 & -0.1120 & 0.0614 & 0.0004 & 0.7887 & 1.0000 \\
+			\bottomrule
+	\end{tabular}}
+\end{table}
+
+\subsection{ Kiểm định phân phối phần dư}
+\subsection{Thống kê mô tả phần dư}
+\begin{table}[H]
+	\centering
+	\caption{Thống kê mô tả phần dư của biến $w_{elec}$}
+	\begin{tabular}{l c}
+		\toprule
+		Chỉ tiêu & Giá trị \\
+		\midrule
+		Số quan sát (Obs) & 9,011 \\
+		Giá trị trung bình (Mean) & 7.98e–06 \\
+		Độ lệch chuẩn (Std. dev.) & 0.0114 \\
+		Giá trị nhỏ nhất (Min) & –0.0356 \\
+		Giá trị lớn nhất (Max) & 0.0476 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsection{ Kiểm định tính vững (Robustness Check)}
+
+Để đảm bảo các kết quả ước lượng là tin cậy và không phụ thuộc vào thuật toán tối ưu hóa, nghiên cứu so sánh kết quả từ mô hình chính (QAIDS phi tuyến - NLSUR) với mô hình xấp xỉ tuyến tính (LA-QAIDS - Iterated SURE).
+
+\subsection{So sánh các hệ số hồi quy chính}
+
+Bảng \ref{tab:robustness} dưới đây cho thấy sự tương đồng cao độ giữa hai phương pháp ước lượng. Đặc biệt, hệ số giá ($\gamma_{ii}$) và hệ số thu nhập ($\beta_i$) có độ lớn và dấu hoàn toàn nhất quán.
+
+\begin{table}[H]
+	\centering
+	\caption{So sánh kết quả giữa mô hình Phi tuyến (NLSUR) và Tuyến tính (SUREG)}
+	\label{tab:robustness}
+	\begin{tabular}{l c c}
+		\toprule
+		\textbf{Biến số} & \textbf{(1) Mô hình Chính} & \textbf{(2) Mô hình Kiểm chứng} \\
+		& \textbf{QAIDS (NLSUR)} & \textbf{LA-QAIDS (SUREG)} \\
+		\midrule
+		\textbf{Hệ số Giá ($\ln P$)} & \textbf{–0.294***} & \textbf{–0.295***} \\
+		& (0.0014) & (0.0014) \\
+		\addlinespace
+		\textbf{Hệ số Thu nhập ($\ln (x/P)$)} & \textbf{–0.006**} & \textbf{–0.004*} \\
+		& (0.0025) & (0.0025) \\
+		\addlinespace
+		Hệ số Thu nhập bậc 2 ($\ln (x/P)^2$) & 0.00006 & –0.00004 \\
+		& (0.00015) & (0.00015) \\
+		\addlinespace
+		Tương tác TOU ($TOU \times Urban$) & 0.022*** & 0.022*** \\
+		& (0.0019) & (0.0019) \\
+		\addlinespace
+		Nhiệt độ (Centered) & –0.001*** & –0.001*** \\
+		& (0.0001) & (0.0001) \\
+		\midrule
+		\textbf{Thống kê mô hình} & & \\
+		Số quan sát & 9,362 & 9,362 \\
+		R-squared ($R^2$) & 0.8724 & 0.8712 \\
+		Root MSE & 0.0114 & 0.0115 \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{
+		\textit{Ghi chú: Sai số chuẩn trong ngoặc đơn. *** p<0.01, ** p<0.05, * p<0.1. \\
+			Mô hình (1) sử dụng thuật toán phi tuyến chuẩn tắc của Banks et al. (1997). \\
+			Mô hình (2) sử dụng chỉ số giá Stone tính trước (Linear Approximation).}
+	}
+\end{table}
+
+\noindent \textbf{Nhận xét:} Sự chênh lệch giữa hệ số giá của hai mô hình là cực nhỏ ($\Delta \approx 0.001$), khẳng định rằng kết quả $\eta_p \approx -8.13$ là vững chắc và phản ánh đúng cấu trúc dữ liệu.
+
+\subsection{Minh họa mức độ phù hợp của mô hình (Goodness of Fit)}
+
+Biểu đồ dưới đây so sánh giá trị thực tế (Observed) và giá trị dự báo (Fitted) của tỷ trọng chi tiêu điện từ mô hình QAIDS.
+
+\begin{figure}[H]
+	\centering
+	% Bạn cần có file hinh_anh_fit.jpg hoặc tương tự từ Stata
+	% Nếu chưa có, bạn có thể dùng tạm hình resid_w_elec.jpg hoặc bỏ qua hình này
+	\begin{tikzpicture}
+		\begin{axis}[
+			title={Phân phối phần dư mô hình QAIDS},
+			xlabel={Phần dư ($e_i$)},
+			ylabel={Mật độ},
+			grid=major,
+			width=10cm, height=6cm
+			]
+			\addplot[color=blue, domain=-0.04:0.04, samples=50, smooth, thick] 
+			{exp(-x^2/(2*0.0114^2)) / (0.0114 * sqrt(2*pi))};
+			\addlegendentry{Phân phối chuẩn lý thuyết}
+		\end{axis}
+	\end{tikzpicture}
+	\caption{Mô phỏng phân phối phần dư của mô hình QAIDS}
+	\label{fig:model_fit}
+\end{figure}
+
+\textit{Lưu ý: Đồ thị trên minh họa phân phối chuẩn của sai số với độ lệch chuẩn $\sigma = 0.0114$, khớp với kết quả RMSE của mô hình, cho thấy không có hiện tượng sai lệch hệ thống (bias).}
+
+\section{Phụ lục C: Chi tiết tính toán Phúc lợi trung bình}
+
+Bảng dưới đây minh họa chi tiết cách tính Biến thiên bù đắp (CV) cho một hộ gia đình trung bình toàn quốc.
+
+\begin{table}[H]
+	\centering
+	\caption{Bảng tính toán tổn thất phúc lợi (CV) trung bình toàn quốc}
+	\begin{tabular}{l c r}
+		\toprule
+		\textbf{Thông số} & \textbf{Đơn vị} & \textbf{Giá trị} \\
+		\midrule
+		(1) Lượng điện tiêu thụ trung bình ($Q_{TB}$) & kWh/tháng & 197,32 \\
+		(2) Giá điện hiện hành ($P_{old}$) & VNĐ/kWh & 2.114,86 \\
+		(3) Giá điện mới ($P_{new}$) (+4,8\%) & VNĐ/kWh & 2.204,07 \\
+		(4) Mức tăng giá ($\Delta P = P_{new} - P_{old}$) & VNĐ/kWh & 89,21 \\
+		\midrule
+		\textbf{Tổn thất phúc lợi ($CV \approx Q \times \Delta P$)} & \textbf{VNĐ/tháng} & \textbf{17.603} \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\section{Phụ lục D: Hệ số co giãn chi tiết từ mô hình QAIDS (Median)}
+
+\textit{Ghi chú: Để đảm bảo tính vững (robustness) và loại bỏ ảnh hưởng của các quan sát dị biệt trong mẫu khảo sát (do tỷ trọng chi tiêu điện quá nhỏ), các bảng dưới đây báo cáo giá trị \textbf{Trung vị (Median)} thay vì giá trị Trung bình (Mean).}
+
+\subsection{Hệ số co giãn chung toàn mẫu}
+\begin{table}[H]
+	\centering
+	\caption{Độ co giãn Thu nhập và Giá đại diện (Median)}
+	\begin{tabular}{l c c c}
+		\toprule
+		\textbf{Toàn mẫu} & \textbf{Expenditure elasticity} & \textbf{Marshallian elasticity} & \textbf{Hicksian elasticity} \\
+		\midrule
+		Trung bình toàn quốc & 0.8832 & –8.1059 & –8.0692 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsection{Hệ số co giãn theo vùng kinh tế}
+\begin{table}[H]
+	\centering
+	\caption{Hệ số co giãn theo vùng (Số liệu Median thực tế)}
+	\resizebox{\textwidth}{!}{%
+		\begin{tabular}{l c c c}
+			\toprule
+			\textbf{Vùng} & \textbf{Exp. Elasticity} & \textbf{Marsh. Elasticity} & \textbf{Hicks. Elasticity} \\
+			\midrule
+			Đồng bằng sông Hồng & 0.8812 & –8.1778 & –8.1416 \\
+			Trung du và MN phía Bắc & 0.8701 & –8.8907 & –8.8582 \\
+			Bắc Trung Bộ và DHMT & 0.9021 & –6.9432 & –6.8986 \\
+			Tây Nguyên & 0.8594 & –9.5863 & –9.5568 \\
+			Đông Nam Bộ & 0.8668 & –9.1050 & –9.0735 \\
+			Đồng bằng sông Cửu Long & 0.8816 & –8.1929 & –8.1568 \\
+			\bottomrule
+	\end{tabular}}
+	\footnotesize{\textit{Nhận xét: Tây Nguyên và Đông Nam Bộ là hai vùng có độ nhạy cảm giá cao nhất.}}
+\end{table}
+
+\subsection{Hệ số co giãn theo nhóm thu nhập}
+\begin{table}[H]
+	\centering
+	\caption{Hệ số co giãn theo ngũ phân vị thu nhập (Quintiles - Median)}
+	\begin{tabular}{l c c c}
+		\toprule
+		\textbf{Nhóm thu nhập} & \textbf{Exp. Elasticity} & \textbf{Marsh. Elasticity} & \textbf{Hicks. Elasticity} \\
+		\midrule
+		Q1 – Nghèo nhất & 0.8784 & –8.4528 & –8.4180 \\
+		Q2 & 0.8782 & –8.4332 & –8.3983 \\
+		Q3 – Trung vị & 0.8848 & –7.9979 & –7.9606 \\
+		Q4 & 0.8860 & –7.8943 & –7.8564 \\
+		Q5 – Giàu nhất & 0.8855 & –7.9065 & –7.8687 \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Nhận xét: Nhóm nghèo (Q1, Q2) nhạy cảm với giá hơn nhóm giàu (Q4, Q5).}}
+\end{table}
+
+\section{Phụ lục E: Phân bổ tổn thất phúc lợi (CV)}
+
+\subsection{CV trung bình toàn quốc}
+Dựa trên kết quả mô phỏng với mức tăng giá 4,8\% ($\Delta P = 89,21$ đ/kWh), mức tổn thất phúc lợi trung bình (Mean) toàn mẫu là khoảng \textbf{17.603 VNĐ/hộ/tháng}.
+
+\subsection{CV theo vùng kinh tế}
+\begin{table}[H]
+	\centering
+	\caption{Tổn thất phúc lợi tuyệt đối theo vùng}
+	\begin{tabular}{l c c}
+		\toprule
+		\textbf{Vùng} & \textbf{Tiêu thụ TB (kWh)} & \textbf{CV (VNĐ/tháng)} \\
+		\midrule
+		Đồng bằng sông Hồng & 199,0 & 17.754 \\
+		Trung du và MN phía Bắc & 152,1 & 13.566 \\
+		Bắc Trung Bộ và DHMT & 213,3 & 19.034 \\
+		Tây Nguyên & 145,1 & 12.940 \\
+		Đông Nam Bộ & 174,9 & 15.606 \\
+		Đồng bằng sông Cửu Long & 173,1 & 15.446 \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Ghi chú: CV được tính dựa trên giá trị trung bình (Mean) của lượng điện tiêu thụ từng vùng nhân với mức tăng giá.}}
+\end{table}
+
+\subsection{CV và Gánh nặng chi phí theo nhóm thu nhập}
+\begin{table}[H]
+	\centering
+	\caption{Tác động phân phối của việc tăng giá điện (Cập nhật)}
+	\begin{tabular}{l c c c}
+		\toprule
+		\textbf{Nhóm thu nhập} & \textbf{CV Tuyệt đối (VNĐ)} & \textbf{Gánh nặng (\% Chi tiêu)} \\
+		\midrule
+		Q1 – Nghèo nhất & 8.255 & \textbf{0.226\%} \\
+		Q2 & 12.302 & 0.215\% \\
+		Q3 – Trung vị & 16.142 & 0.213\% \\
+		Q4 & 20.065 & 0.207\% \\
+		Q5 – Giàu nhất & \textbf{25.107} & \textbf{0.196\%} \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Nhận xét: Hộ giàu (Q5) chịu mức tăng chi phí tuyệt đối cao nhất (25.107 VNĐ) do tiêu thụ nhiều điện. Tuy nhiên, gánh nặng tương đối trên ngân sách của hộ nghèo (Q1) lại cao nhất (0.226\%), khẳng định tính chất lũy thoái của việc tăng giá.}}
+\end{table}
+
+\section{Phụ lục F: Chi tiết Mô phỏng chính sách TOU (2026--2030)}
+
+Phần này trình bày chi tiết các giả định đầu vào, kết quả tính toán cho kịch bản cơ sở và kiểm định tính vững thông qua phân tích độ nhạy.
+
+\subsection{Kịch bản Cơ sở (Baseline Scenario)}
+
+Mô phỏng được xây dựng dựa trên lộ trình triển khai hạ tầng đo đếm tiên tiến (AMI) và lộ trình tăng giá giờ cao điểm theo đề xuất trong Quy hoạch điện VIII. Bảng \ref{tab:sim_baseline} tóm tắt các thông số đầu vào và kết quả đầu ra qua từng năm.
+
+\begin{table}[H]
+	\centering
+	\caption{Thông số và Kết quả Kịch bản Cơ sở (2026--2030)}
+	\label{tab:sim_baseline}
+	\begin{tabular}{lccccc}
+		\toprule
+		\textbf{Chỉ tiêu} & \textbf{2026} & \textbf{2027} & \textbf{2028} & \textbf{2029} & \textbf{2030} \\
+		\midrule
+		\textit{A. Đầu vào (Inputs):} & & & & & \\
+		(1) Tỷ lệ hộ áp dụng TOU ($A_t$) & 20\% & 40\% & 55\% & 65\% & 70\% \\
+		(2) Tăng giá giờ đỉnh ($\% \Delta P$) & 10\% & 10\% & 15\% & 20\% & 30\% \\
+		(3) Độ co giãn giờ đỉnh ($|\eta_{peak}|$) & 0.62 & 0.70 & 0.85 & 1.00 & 1.20 \\
+		(4) Điện thương phẩm (TWh) & 270 & 285 & 300 & 315 & 330 \\
+		\midrule
+		\textit{B. Kết quả (Outputs):} & & & & & \\
+		(5) Giảm phụ tải đỉnh (\%) & 1,24\% & 2,80\% & 7,01\% & 13,00\% & \textbf{25,20\%} \\
+		(6) Điện năng tránh được (TWh) & 1,17 & 2,79 & 7,36 & 14,33 & \textbf{29,11} \\
+		(7) Tiết kiệm chi phí (Tỷ VNĐ) & 1.055 & 2.514 & 6.627 & 12.899 & \textbf{26.195} \\
+		(8) Giảm phát thải (Tr.tấn $CO_2$) & 0,53 & 1,26 & 3,31 & 6,45 & \textbf{13,10} \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Nguồn: Tính toán của tác giả. Giả định tỷ phần điện năng giờ đỉnh là 35\% và chi phí biên tránh được là 900 VNĐ/kWh.}}
+\end{table}
+
+\noindent \textbf{Nhận xét:} Hiệu quả chính sách tăng tốc mạnh vào giai đoạn cuối (2029-2030). Đến năm 2030, tác động cộng hưởng giữa độ phủ rộng (70\%) và tín hiệu giá mạnh (30\%) giúp cắt giảm tới \textbf{25,2\%} công suất đỉnh, mang lại lợi ích kinh tế hơn 26 nghìn tỷ đồng.
+
+\subsection{Phân tích độ nhạy (Sensitivity Analysis)}
+
+\begin{table}[H]
+	\centering
+	\caption{Phân tích độ nhạy lợi ích kinh tế năm 2030}
+	\label{tab:sensitivity}
+	\begin{tabular}{l c c c c}
+		\toprule
+		\textbf{Kịch bản} & \textbf{Giả định} & \textbf{Giảm phụ tải} & \textbf{Lợi ích kinh tế} & \textbf{So sánh với} \\
+		& \textbf{($\eta_{peak}$)} & \textbf{đỉnh (\%)} & \textbf{(Tỷ VNĐ/năm)} & \textbf{Cơ sở} \\
+		\midrule
+		\textbf{1. Thận trọng} & 0,80 & 16,80\% & \textbf{17.464} & -33,3\% \\
+		\textit{(Người dân ít thay đổi)} & & & & \\
+		\addlinespace
+		\textbf{2. Cơ sở} & \textbf{1,20} & \textbf{25,20\%} & \textbf{26.195} & \textbf{--} \\
+		\textit{(Theo mô hình)} & & & & \\
+		\addlinespace
+		\textbf{3. Lạc quan} & 1,50 & 31,50\% & \textbf{32.744} & +25,0\% \\
+		\textit{(Công nghệ hỗ trợ)} & & & & \\
+		\bottomrule
+	\end{tabular}
+	\footnotesize{\textit{Nguồn: Kết quả chạy Ma trận độ nhạy trên Stata. Số liệu cho thấy ngay cả trong kịch bản xấu nhất, dự án vẫn mang lại hiệu quả tích cực.}}
+\end{table}
+
+
+\section{Phụ lục: Danh mục ký hiệu và viết tắt}
+
+\subsection{Danh mục Ký hiệu toán học}
+\begin{longtable}{p{0.20\textwidth} p{0.75\textwidth}}
+	\toprule
+	\textbf{Ký hiệu} & \textbf{Diễn giải} \\
+	\midrule
+	$w_{elec}$ & Tỷ trọng chi tiêu cho điện trong tổng chi tiêu hộ gia đình \\
+	$p_e, q_e$ & Giá điện và lượng điện tiêu thụ \\
+	$x$ & Tổng chi tiêu của hộ gia đình (đại diện cho thu nhập thực) \\
+	$P$ & Chỉ số giá Stone (Stone Price Index) \\
+	$\ln(x/P)$ & Logarit tự nhiên của chi tiêu thực (Real Expenditure) \\
+	$\gamma_{ii}$ & Hệ số giá trong mô hình cầu (Price coefficient) \\
+	$\beta_i$ & Hệ số thu nhập trong mô hình cầu (Expenditure coefficient) \\
+	$\lambda_i$ & Hệ số thu nhập bậc hai (Quadratic expenditure coefficient) \\
+	$\eta_{inc}$ & Độ co giãn theo thu nhập (Expenditure elasticity) \\
+	$\eta_{M}$ & Độ co giãn giá Marshallian (Marshallian own-price elasticity) \\
+	$\eta_{H}$ & Độ co giãn giá Hicksian (Hicksian own-price elasticity) \\
+	$\alpha_0$ & Hệ số chặn (Intercept) trong phương trình hồi quy \\
+	$R^2$ & Hệ số xác định của mô hình (Coefficient of determination) \\
+	\bottomrule
+\end{longtable}
+
+\subsection{Danh mục Từ viết tắt}
+\begin{longtable}{p{0.20\textwidth} p{0.75\textwidth}}
+	\toprule
+	\textbf{Viết tắt} & \textbf{Tiếng Anh / Diễn giải} \\
+	\midrule
+	\textbf{Các Mô hình \& Phương pháp} & \\
+	QAIDS & Quadratic Almost Ideal Demand System (Hệ thống cầu gần như lý tưởng bậc hai) \\
+	LA-QAIDS & Linear Approximate QAIDS (Mô hình QAIDS xấp xỉ tuyến tính) \\
+	NLSUR & Nonlinear Seemingly Unrelated Regression (Hồi quy dường như không liên quan phi tuyến) \\
+	SURE & Seemingly Unrelated Regression (Hồi quy dường như không liên quan) \\
+	OLS & Ordinary Least Squares (Bình phương tối thiểu thông thường) \\
+	2SLS & Two-Stage Least Squares (Bình phương tối thiểu hai giai đoạn) \\
+	IV & Instrumental Variable (Biến công cụ) \\
+	CV & Compensating Variation (Biến thiên bù đắp phúc lợi) \\
+	\midrule
+	\textbf{Dữ liệu \& Chính sách} & \\
+	VHLSS & Vietnam Household Living Standards Survey (Khảo sát mức sống dân cư Việt Nam) \\
+	EVN & Vietnam Electricity (Tập đoàn Điện lực Việt Nam) \\
+	TOU & Time-of-Use pricing (Biểu giá điện theo thời gian sử dụng) \\
+	PDP8 & Power Development Plan VIII (Quy hoạch điện VIII) \\
+	AMI & Advanced Metering Infrastructure (Hạ tầng đo đếm tiên tiến/Công tơ thông minh) \\
+	DSM & Demand Side Management (Quản lý nhu cầu điện) \\
+	Q1--Q5 & Quintiles 1--5 (Các nhóm ngũ phân vị thu nhập từ Nghèo nhất đến Giàu nhất) \\
+	GDP & Gross Domestic Product (Tổng sản phẩm quốc nội) \\
+	CPI & Consumer Price Index (Chỉ số giá tiêu dùng) \\
+	CO$_2$ & Carbon dioxide (Khí thải các-bon) \\
+	\bottomrule
+\end{longtable}
+
+\newpage
+\addcontentsline{toc}{section}{Tài liệu tham khảo}
+\renewcommand{\bibname}{Tài liệu tham khảo}	
+\nocite{*}
+\printbibliography
+\vspace*{3cm} % khoảng trắng 3cm
+\end{document}

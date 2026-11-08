@@ -1,0 +1,517 @@
+------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  D:\01. HOC HANH\13. thac si ueh\05. MON HOC\HOC KY 2\03. Phân tích hành vi người tiêu dùng_Mr. Thuy\06. du 
+> an cuoi ky\00. File log\QAIDS_TOU_2022.log
+  log type:  text
+ opened on:   9 Nov 2025, 10:58:42
+
+. 
+. * === Thiết lập đường dẫn làm việc ===
+. local dir `c(pwd)'
+
+. 
+. ******************************************************
+. * GHÉP FILE THÊM TRỌNG SỐ
+. ******************************************************
+. ******************************************************
+. * Bước 0: Chuẩn bị file trọng số
+. ******************************************************
+. 
+. use "B30_weight2022_wt9.dta", clear
+
+. 
+. * Đổi tên biến để trùng với file chính
+. rename tinh     MATINH
+
+. rename huyen    MAHUYEN
+
+. rename xa       MAXA
+
+. rename diaban   MADIABAN
+
+. rename soho     HOSO
+
+. rename ky       KYDIEUTRA
+
+. 
+. * Nếu là string, chuyển sang numeric
+. destring MATINH, replace force
+MATINH already numeric; no replace
+
+. destring MAHUYEN, replace force
+MAHUYEN already numeric; no replace
+
+. destring MAXA, replace force
+MAXA already numeric; no replace
+
+. destring MADIABAN, replace force
+MADIABAN already numeric; no replace
+
+. destring HOSO, replace force
+HOSO already numeric; no replace
+
+. destring KYDIEUTRA, replace force
+KYDIEUTRA already numeric; no replace
+
+. 
+. * Lưu file trọng số đã chuẩn hóa
+. save "B30_weight2022_wt9_clean_num.dta", replace
+file B30_weight2022_wt9_clean_num.dta saved
+
+. 
+. ******************************************************
+. * Bước 1: Mở file dữ liệu chính (hộ)
+. ******************************************************
+. 
+. use "B27_Ho_ThongTinHo.dta", clear
+
+. 
+. * Nếu có _merge cũ, xóa đi
+. capture drop _merge
+
+. 
+. * Chuyển các biến string sang numeric nếu cần
+. destring MATINH, replace force
+MATINH: all characters numeric; replaced as byte
+
+. destring MAHUYEN, replace force
+MAHUYEN: all characters numeric; replaced as int
+
+. destring MAXA, replace force
+MAXA: all characters numeric; replaced as long
+
+. destring MADIABAN, replace force
+MADIABAN: all characters numeric; replaced as int
+
+. destring HOSO, replace force
+HOSO: all characters numeric; replaced as byte
+
+. destring KYDIEUTRA, replace force
+KYDIEUTRA already numeric; no replace
+
+. ******************************************************
+. * Bước 2: Ghép m:1 trọng số vào file chính
+. ******************************************************
+. 
+. merge m:1 MATINH MAHUYEN MAXA MADIABAN ///
+>     using "B30_weight2022_wt9_clean_num.dta"
+(variable MATINH was byte, now double to accommodate using data's values)
+(variable MAHUYEN was int, now double to accommodate using data's values)
+(variable MAXA was long, now double to accommodate using data's values)
+(variable MADIABAN was int, now double to accommodate using data's values)
+(variable HOSO was byte, now double to accommodate using data's values)
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                             9,398  (_merge==3)
+    -----------------------------------------
+
+. 
+end of do-file
+
+. do "C:\Users\Admin\AppData\Local\Temp\STDca60_000000.tmp"
+
+. * Tạo trọng số trung bình theo cấp tỉnh cho quan sát đã match
+. bysort MATINH: egen wt9_mean = mean(wt9) if _merge==3
+
+. 
+end of do-file
+
+. do "C:\Users\Admin\AppData\Local\Temp\STDca60_000000.tmp"
+
+. * Gán cho các quan sát không match
+. replace wt9 = wt9_mean if _merge==1
+(0 real changes made)
+
+. 
+end of do-file
+
+. do "C:\Users\Admin\AppData\Local\Temp\STDca60_000000.tmp"
+
+. drop wt9_mean _merge
+
+. 
+end of do-file
+
+. do "C:\Users\Admin\AppData\Local\Temp\STDca60_000000.tmp"
+
+. ******************************************************
+. * Bước 3: Kiểm tra trọng số
+. ******************************************************
+. 
+. describe
+
+Contains data from B27_Ho_ThongTinHo.dta
+ Observations:         9,398                  
+    Variables:           199                  31 Jul 2024 15:47
+------------------------------------------------------------------------------------------------------------------------
+Variable      Storage   Display    Value
+    name         type    format    label      Variable label
+------------------------------------------------------------------------------------------------------------------------
+IDHO            str33   %33s                  
+MATINH          double  %10.0g                
+MAHUYEN         double  %10.0g                
+MAXA            double  %10.0g                
+MADIABAN        double  %10.0g                
+TTNT            double  %12.0g                
+HOSO            double  %10.0g                
+GIOITINHCHUHO   double  %12.0g                
+DANTOCCHUHO     double  %12.0g                
+KYDIEUTRA       double  %12.0g                
+LOAIPHIEU       double  %12.0g                
+Q1B             double  %12.0g                
+Q2A             double  %12.0g                
+Q2B             double  %12.0g                
+Q2C             double  %12.0g                
+Q2D             double  %12.0g                
+Q2E             double  %12.0g                
+Q2F             double  %12.0g                
+Q3A             double  %12.0g                
+Q4A             double  %12.0g                
+Q4B             double  %12.0g                
+Q4C             double  %12.0g                
+Q4D             double  %12.0g                
+Q4E             double  %12.0g                
+TONGTHU         double  %12.0g                
+TONGCHI         double  %12.0g                
+THUNHAP         double  %12.0g                
+THUBQ           double  %12.0g                
+TONGCHITIEU     double  %12.0g                
+TONGCHITIEUBQ   double  %12.0g                
+SONHANKHAU      double  %12.0g                
+M2CT            double  %12.0g                
+M2TN            double  %12.0g                
+M3A_C1          double  %12.0g                
+M3A_C10         double  %12.0g                
+M3A_C11         double  %12.0g                
+M3A_C12         double  %12.0g                
+M3CT1           double  %12.0g                
+M3CT2           double  %12.0g                
+M3CT3           double  %12.0g                
+M3CT            double  %12.0g                
+M3TN            double  %12.0g                
+M4ATN1          double  %12.0g                
+M4ATN2          double  %12.0g                
+M4ATN3          double  %12.0g                
+M4ATN4          double  %12.0g                
+M4ATN5          double  %12.0g                
+M4ATN6          double  %12.0g                
+M4ATN           double  %12.0g                
+M4B0_C1         double  %12.0g                
+M4B0TN          double  %12.0g                
+M4B1_C1A        double  %12.0g                
+M4B1_C1B        double  %12.0g                
+M4B11T          double  %12.0g                
+M4B12T          double  %12.0g                
+M4B13T          double  %12.0g                
+M4B14T          double  %12.0g                
+M4B15T          double  %12.0g                
+M4B1T2          double  %12.0g                
+M4B1T           double  %12.0g                
+M4B1C           double  %12.0g                
+M4B2_C1A        double  %12.0g                
+M4B2_C1B        double  %12.0g                
+M4B2T2          double  %12.0g                
+M4B21T          double  %12.0g                
+M4B22T          double  %12.0g                
+M4B21C          double  %12.0g                
+M4B22C          double  %12.0g                
+M4B3_C1A        double  %12.0g                
+M4B3_C1B        double  %12.0g                
+M4B3T2          double  %12.0g                
+M4B3T           double  %12.0g                
+M4B3C           double  %12.0g                
+M4B4_C1A        double  %12.0g                
+M4B4_C1B        double  %12.0g                
+M4B4T2          double  %12.0g                
+M4B4T           double  %12.0g                
+M4B4C           double  %12.0g                
+M4B5_C1A        double  %12.0g                
+M4B5_C1B        double  %12.0g                
+M4B5T2          double  %12.0g                
+M4B5T1          double  %12.0g                
+M4B5C           double  %12.0g                
+M4C_C1          double  %12.0g                
+M4CTT           double  %12.0g                
+M4CT            double  %12.0g                
+M4CCT           double  %12.0g                
+M4CC            double  %12.0g                
+M4D_01          double  %12.0g                
+M4D_02          double  %12.0g                
+M4D_03          double  %12.0g                
+M4D_04          double  %12.0g                
+M4D_05          double  %12.0g                
+M4D_06          double  %12.0g                
+M4D_07          double  %12.0g                
+M4D_08          double  %12.0g                
+M4D_09          double  %12.0g                
+M4D_10          double  %12.0g                
+M4D_11          double  %12.0g                
+M4D_12          double  %12.0g                
+N_M4D_12GHIRO   strL    %255s                 
+M4DTN           double  %12.0g                
+M5A1CT          double  %12.0g                
+M5A1C4          double  %12.0g                
+M5A1C5          double  %12.0g                
+M5A2CT          double  %12.0g                
+M5A2C6          double  %12.0g                
+M5A2C7          double  %12.0g                
+M5A2C8          double  %12.0g                
+M5B1CT          double  %12.0g                
+M5B1C6          double  %12.0g                
+M5B1C7          double  %12.0g                
+M5B1C8          double  %12.0g                
+M5B2CT          double  %12.0g                
+M5B2C4          double  %12.0g                
+M5B2C5          double  %12.0g                
+M5B3CT          double  %12.0g                
+M6A_C7          double  %12.0g                
+M7_C1           double  %12.0g                
+M7_C2           double  %12.0g                
+M7_C3           double  %12.0g                
+M7_C4A          double  %12.0g                
+M7_C4AGHIRO     str120  %120s                 
+M7_C4B          double  %12.0g                
+M7_C4BGHIRO     str51   %51s                  
+M7_C4C          double  %12.0g                
+M7_C4CGHIRO     str147  %147s                 
+M7_C4D          double  %12.0g                
+M7_C5           double  %12.0g                
+M7_C6           double  %12.0g                
+M7_C7           double  %12.0g                
+M7_C8           double  %12.0g                
+M7_C8A          double  %12.0g                
+M7_C9           double  %12.0g                
+M7_C10          double  %12.0g                
+M7_C11          double  %12.0g                
+M7_C12          double  %12.0g                
+M7_C13          double  %12.0g                
+M7_C13GHIRO     str165  %165s                 
+M7_C13A         double  %12.0g                
+M7_C13AGHIRO    str87   %87s                  
+M7_C14          double  %12.0g                
+M7_C15          double  %12.0g                
+M7_C15GHIRO     str84   %84s                  
+M7_C16          double  %12.0g                
+M7_C16GHIRO     str105  %105s                 
+M7_C17          double  %12.0g                
+M7_C18          double  %12.0g                
+M7_C18GHIRO     str201  %201s                 
+M7_C19          double  %12.0g                
+M7_C20          double  %12.0g                
+M8_C1           double  %12.0g                
+M8_C201         double  %12.0g                
+M8_C202         double  %12.0g                
+M8_C203         double  %12.0g                
+M8_C204         double  %12.0g                
+M8_C205         double  %12.0g                
+M8_C206         double  %12.0g                
+M8_C207         double  %12.0g                
+M8_C208         double  %12.0g                
+M8_C209         double  %12.0g                
+M8_C210         double  %12.0g                
+M8_C210GHIRO    strL    %255s                 
+M8_C3           double  %12.0g                
+M8_C401         double  %12.0g                
+M8_C402         double  %12.0g                
+M8_C403         double  %12.0g                
+M8_C404         double  %12.0g                
+M8_C405         double  %12.0g                
+M8_C406         double  %12.0g                
+M8_C407         double  %12.0g                
+M8_C408         double  %12.0g                
+M8_C409         double  %12.0g                
+M8_C410         double  %12.0g                
+M8_C410GHIRO    strL    %255s                 
+M8_C5           double  %12.0g                
+M8_C601         double  %12.0g                
+M8_C602         double  %12.0g                
+M8_C603         double  %12.0g                
+M8_C604         double  %12.0g                
+M8_C605         double  %12.0g                
+M8_C605GHIRO    strL    %255s                 
+M8_C701         double  %12.0g                
+M8_C702         double  %12.0g                
+M8_C703         double  %12.0g                
+M8_C704         double  %12.0g                
+M8_C705         double  %12.0g                
+M8_C706         double  %12.0g                
+M8_C706GHIRO    strL    %255s                 
+M8_C707         double  %12.0g                
+M8_C801         double  %12.0g                
+M8_C802         double  %12.0g                
+M8_C803         double  %12.0g                
+M8_C804         double  %12.0g                
+M8_C805         double  %12.0g                
+M8_C805GHIRO    strL    %255s                 
+M8_C806         double  %12.0g                
+ttnt            double  %12.0g                
+wt9             double  %12.0g                
+------------------------------------------------------------------------------------------------------------------------
+Sorted by: MATINH
+     Note: Dataset has changed since last saved.
+
+. ds
+IDHO          TONGCHI       M4B0TN        M4B4T2        N_M4D_12GH~O  M7_C4C        M7_C20        M8_C5
+MATINH        THUNHAP       M4B1_C1A      M4B4T         M4DTN         M7_C4CGHIRO   M8_C1         M8_C601
+MAHUYEN       THUBQ         M4B1_C1B      M4B4C         M5A1CT        M7_C4D        M8_C201       M8_C602
+MAXA          TONGCHITIEU   M4B11T        M4B5_C1A      M5A1C4        M7_C5         M8_C202       M8_C603
+MADIABAN      TONGCHITIE~Q  M4B12T        M4B5_C1B      M5A1C5        M7_C6         M8_C203       M8_C604
+TTNT          SONHANKHAU    M4B13T        M4B5T2        M5A2CT        M7_C7         M8_C204       M8_C605
+HOSO          M2CT          M4B14T        M4B5T1        M5A2C6        M7_C8         M8_C205       M8_C605GHIRO
+GIOITINHCH~O  M2TN          M4B15T        M4B5C         M5A2C7        M7_C8A        M8_C206       M8_C701
+DANTOCCHUHO   M3A_C1        M4B1T2        M4C_C1        M5A2C8        M7_C9         M8_C207       M8_C702
+KYDIEUTRA     M3A_C10       M4B1T         M4CTT         M5B1CT        M7_C10        M8_C208       M8_C703
+LOAIPHIEU     M3A_C11       M4B1C         M4CT          M5B1C6        M7_C11        M8_C209       M8_C704
+Q1B           M3A_C12       M4B2_C1A      M4CCT         M5B1C7        M7_C12        M8_C210       M8_C705
+Q2A           M3CT1         M4B2_C1B      M4CC          M5B1C8        M7_C13        M8_C210GHIRO  M8_C706
+Q2B           M3CT2         M4B2T2        M4D_01        M5B2CT        M7_C13GHIRO   M8_C3         M8_C706GHIRO
+Q2C           M3CT3         M4B21T        M4D_02        M5B2C4        M7_C13A       M8_C401       M8_C707
+Q2D           M3CT          M4B22T        M4D_03        M5B2C5        M7_C13AGHIRO  M8_C402       M8_C801
+Q2E           M3TN          M4B21C        M4D_04        M5B3CT        M7_C14        M8_C403       M8_C802
+Q2F           M4ATN1        M4B22C        M4D_05        M6A_C7        M7_C15        M8_C404       M8_C803
+Q3A           M4ATN2        M4B3_C1A      M4D_06        M7_C1         M7_C15GHIRO   M8_C405       M8_C804
+Q4A           M4ATN3        M4B3_C1B      M4D_07        M7_C2         M7_C16        M8_C406       M8_C805
+Q4B           M4ATN4        M4B3T2        M4D_08        M7_C3         M7_C16GHIRO   M8_C407       M8_C805GHIRO
+Q4C           M4ATN5        M4B3T         M4D_09        M7_C4A        M7_C17        M8_C408       M8_C806
+Q4D           M4ATN6        M4B3C         M4D_10        M7_C4AGHIRO   M7_C18        M8_C409       ttnt
+Q4E           M4ATN         M4B4_C1A      M4D_11        M7_C4B        M7_C18GHIRO   M8_C410       wt9
+TONGTHU       M4B0_C1       M4B4_C1B      M4D_12        M7_C4BGHIRO   M7_C19        M8_C410GHIRO
+
+. 
+. * Thống kê tổng quát
+. summarize wt9
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         wt9 |      9,398    2873.488    1784.216        447      44864
+
+. 
+. * Thống kê theo tỉnh
+. tabstat wt9, by(tinh) stat(mean min max n)
+variable tinh not found
+(error in option by())
+r(111);
+
+end of do-file
+
+r(111);
+
+. do "C:\Users\Admin\AppData\Local\Temp\STDca60_000000.tmp"
+
+. * Thống kê tổng quát
+. summarize wt9
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         wt9 |      9,398    2873.488    1784.216        447      44864
+
+. 
+. * Thống kê theo tỉnh
+. tabstat wt9, by(MATINH) stat(mean min max n)
+
+Summary for variables: wt9
+Group variable: MATINH 
+
+  MATINH |      Mean       Min       Max         N
+---------+----------------------------------------
+       1 |  5358.921      3156      9776       420
+       2 |  1786.371       679      2200       105
+       4 |  1369.529       644      2770       102
+       6 |     798.5       517      1271       102
+       8 |  1902.474      1261      4315       114
+      10 |  1731.676       544      4352       102
+      11 |  1346.529      1058      1594       102
+      12 |  1031.765       447      2283       102
+      14 |  2389.929      2079      3043       126
+      15 |  1970.947      1009      3858       114
+      17 |  2026.684      1056      4223       114
+      19 |   2386.49       805      7585       147
+      20 |  1828.889      1348      5014       108
+      22 |  2496.408      1665      3009       147
+      24 |      2762      1867      3488       168
+      25 |  2634.385      1632      5690       156
+      26 |  2254.067      1297      3154       135
+      27 |  3046.304      2569      3575       138
+      30 |  3143.082      2376      5677       183
+      31 |  3195.419      1643      5080       186
+      33 |  2567.714      1318      2969       147
+      34 |  3196.206      1331     44864       189
+      35 |  2104.122      1317      2501       123
+      36 |  3030.138      1642      7724       195
+      37 |  2221.581      1191      2791       129
+      38 |  3959.159      3248      4613       246
+      40 |    3704.8      1900     13263       225
+      42 |   2550.48      1423      3032       150
+      44 |  1981.825      1261      2345       120
+      45 |  1630.441      1419      1972       102
+      46 |  2222.289      1083      4582       135
+      48 |   2404.78       905      3076       123
+      49 |  2533.698      1044      3322       159
+      51 |  2349.653      1329      2944       147
+      52 |  2634.019      2166      3137       162
+      54 |   2049.78      1025      2452       123
+      56 |  2369.153      1647      4625       137
+      58 |  1601.412      1249      1926       102
+      60 |  2402.111      2034      2609       135
+      62 |    1432.5      1171      2569       102
+      64 |  2738.915      2156      3153       141
+      66 |  3055.764      1619     37867       165
+      67 |  1687.441      1114      1922       102
+      68 |  2561.255      2041      5367       141
+      70 |  2324.125      1571      9521       120
+      72 |    2407.6      1853      3097       135
+      74 |   5498.61      2668     12727       177
+      75 |  4177.029      2188      5233       207
+      77 |  2461.591      1263      5068       132
+      79 |  7557.855      2620     11893       351
+      80 |  2995.135      1070      3825       156
+      82 |  2899.842      2115      3523       171
+      83 |  2532.373      1767      2982       153
+      84 |  2168.302      1037      2613       129
+      86 |  2195.667      1143      2425       135
+      87 |  2550.911      1056      2890       168
+      89 |  2760.532      2120      4741       186
+      91 |  2786.296       791      3604       162
+      92 |  2724.283      1816      3095       138
+      93 |  1754.432       459     12430       111
+      94 |  2170.042      1520      2483       144
+      95 |  1961.026      1461      2315       114
+      96 |  2209.087      1886      2519       138
+---------+----------------------------------------
+   Total |  2873.488       447     44864      9398
+--------------------------------------------------
+
+. 
+. * Thống kê theo khu vực đô thị/nông thôn
+. tabstat wt9, by(TTNT) stat(mean min max n)
+
+Summary for variables: wt9
+Group variable: TTNT 
+
+    TTNT |      Mean       Min       Max         N
+---------+----------------------------------------
+       1 |  3366.611       447     12727      3171
+       2 |  2622.373       459     44864      6227
+---------+----------------------------------------
+   Total |  2873.488       447     44864      9398
+--------------------------------------------------
+
+. 
+end of do-file
+
+. do "C:\Users\Admin\AppData\Local\Temp\STDca60_000000.tmp"
+
+. ******************************************************
+. * Bước 4: Xuất file kết quả
+. ******************************************************
+. 
+. save "B27_Ho_ThongTinHo_weight2022.dta", replace
+(file B27_Ho_ThongTinHo_weight2022.dta not found)
+file B27_Ho_ThongTinHo_weight2022.dta saved
+
+. 
+end of do-file
+
+. exit, clear

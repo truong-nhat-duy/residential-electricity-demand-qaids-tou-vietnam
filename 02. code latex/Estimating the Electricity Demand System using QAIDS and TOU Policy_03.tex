@@ -1,0 +1,321 @@
+%=====================================================================
+% FINAL JOURNAL-READY PAPER: Residential Electricity Demand QAIDS + TOU Vietnam
+% Author: Truong Nhat Duy (UEH & Fulbright Vietnam)
+% Date: November 09, 2025
+%=====================================================================
+
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{siunitx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{pdflscape}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage{ifthen}
+\usepackage{threeparttable}
+
+\onehalfspacing
+\geometry{margin=1in}
+\bibpunct{(}{)}{;}{a}{}{,}
+
+% Custom formatting
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\bfseries}{\thesubsection}{1em}{}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsecfont}{\bfseries}
+
+% Header
+\setlength{\headheight}{15pt}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\thepage}
+\lhead{\textit{Electricity Demand with QAIDS and TOU}}
+
+\title{\textbf{Estimating Residential Electricity Demand in Vietnam Using QAIDS with Time-of-Use Pricing: Evidence from VHLSS 2022 and Policy Simulations for 2025--2030}}
+
+\author{
+	\textbf{Truong Nhat Duy}\thanks{Email: duytruong.[ID redacted]@st.ueh.edu.vn} \\[0.3em]
+	\small MSc Candidate, Development Economics, University of Economics Ho Chi Minh City (UEH) \\[-0.2em]
+	\small Master of Public Policy, Fulbright School of Public Policy and Management \\[-0.2em]
+	\small Ho Chi Minh City, Vietnam
+}
+\date{November 09, 2025}
+
+\begin{document}
+	
+	\maketitle
+	
+	%=====================================================================
+	% TABLE OF CONTENTS
+	%=====================================================================
+	\tableofcontents
+	\newpage
+	
+	%=====================================================================
+	% ABSTRACT
+	%=====================================================================
+	\begin{abstract}
+		\noindent This paper provides a detailed analysis of residential electricity demand in Vietnam using the \textbf{Quadratic Almost Ideal Demand System (QAIDS)} combined with \textbf{Time-of-Use (TOU) pricing} and climate controls, based on the nationally representative \textbf{Vietnam Household Living Standards Survey (VHLSS) 2022} ($N=9{,}383$).  
+		
+		Estimation results indicate a \textbf{price elasticity of -0.62}, \textbf{income elasticity of 0.38}, and a significant positive \textbf{urban-TOU interaction of +0.18}, highlighting heterogeneity across regions.  
+		
+		Welfare analysis shows a 10\% peak price increase generates a \textbf{Compensating Variation (CV) loss of VND 58,000/household/month}, with the poorest quintile bearing 2.1 times the relative burden.  
+		
+		Dynamic policy simulations for 2025--2030 project \textbf{12--25\% peak demand reductions} and \textbf{10 million tons CO$_2$ savings} under full TOU implementation and distributed solar integration.  
+		
+		The contributions of this study are: (i) first nationally representative QAIDS estimation for Vietnam incorporating TOU and climate heterogeneity, (ii) integration of 2SLS and QAIDS estimation to address price endogeneity, (iii) detailed welfare and CV analysis across income quintiles, and (iv) dynamic scenario simulations for energy policy planning and net-zero transition.
+	\end{abstract}
+	
+	%=====================================================================
+	% 1. INTRODUCTION
+	%=====================================================================
+	\section{Introduction}
+	Vietnam has experienced rapid residential electricity consumption growth, averaging 10\% per year from 2015 to 2022 \citep{gso2024}, with residential demand now accounting for more than 50\% of total electricity use.  
+	
+	The government implemented a 4.8\% tariff increase in 2025 (Decision 599/QD-EVN) and initiated TOU pilots in Hanoi and Ho Chi Minh City \citep{evn2025}.  
+	
+	Despite these measures, prior research often ignores endogeneity from tiered pricing and fails to account for heterogeneity across income, urban/rural location, and climate conditions.  
+	
+	This paper addresses three research questions:
+	\begin{enumerate}
+		\item How do electricity prices, household income, and TOU affect residential electricity expenditure shares in Vietnam?
+		\item How do elasticities vary across income quintiles, regions, and temperature exposure?
+		\item What are the welfare and environmental impacts of nationwide TOU implementation?
+	\end{enumerate}
+	
+	The paper contributes to the literature by providing: (i) a first nationally representative QAIDS estimation incorporating TOU and temperature effects, (ii) CV-based welfare analysis across income groups, (iii) combination of 2SLS and QAIDS to address price endogeneity, and (iv) dynamic simulations of policy scenarios for 2025--2030.
+	
+	%=====================================================================
+	% 2. LITERATURE REVIEW
+	%=====================================================================
+	\section{Literature Review}
+	\subsection{Theoretical Framework}
+	Consumer demand is modeled through utility maximization \citep{varian1992}:
+	\[
+	\max_u u(x) \quad \text{s.t.} \quad p'x = m
+	\]
+	
+	QAIDS \citep{banks1997} extends the Almost Ideal Demand System (AIDS), capturing non-linear Engel curves:
+	\[
+	w_i = \alpha_i + \sum_j \gamma_{ij} \ln p_j + \beta_i \ln\left(\frac{x}{P}\right) + \frac{\lambda_i}{b(P)} \left[\ln\left(\frac{x}{P}\right)\right]^2
+	\]
+	
+	\subsection{Empirical Evidence}
+	Table \ref{tab:lit_review} summarizes selected studies on residential electricity demand and TOU. Price elasticities range from $-0.15$ to $-0.68$, with TOU programs in pilot experiments reducing peak load by 10--15\% \citep{faruqui2010, jessoe2014}.  
+	
+	This study combines QAIDS and TOU with 2SLS estimation to correct for endogeneity and provide nationally representative elasticity measures for Vietnam.
+	
+	\begin{table}[H]
+		\centering
+		\caption{Selected Empirical Studies on Residential Electricity Demand and TOU Pricing}
+		\label{tab:lit_review}
+		\resizebox{\textwidth}{!}{
+			\begin{tabular}{llccc>{\raggedright\arraybackslash}p{5cm}}
+				\toprule
+				Study & Model & Price Elasticity & TOU Effect & Context \\
+				\midrule
+				Balarama et al. (2020) & 2SLS & -0.45 & -- & Bangladesh \\
+				Lê (2020) & 2SLS & -0.4 to -0.6 & -- & Vietnam (VHLSS 2016) \\
+				Faruqui \& Sergici (2010) & Meta-analysis & -- & -10\% to -15\% & US experimental pilots \\
+				Ito (2014) & Regression Discontinuity & -0.15 & -- & California \\
+				Jessoe \& Rapson (2014) & RCT & -- & -13\% & Smart meter adoption \\
+				Labandeira et al. (2017) & AIDS & -0.3 to -0.7 & -- & Spain \\
+				Krishnamurthy \& Kriström (2015) & QAIDS & -0.5 & -- & 11 OECD countries \\
+				Filippini \& Pachauri (2016) & 2SLS & -0.68 & -- & India \\
+				Wang \& Mogi (2017) & QAIDS & -0.55 & -- & China \\
+				Burke \& Abay (2021) & IV & -0.61 & -- & US states \\
+				\textbf{This study} & \textbf{QAIDS + 2SLS + TOU} & \textbf{-0.62} & \textbf{+0.31} & \textbf{Vietnam 2022} \\
+				\bottomrule
+		\end{tabular}}
+	\end{table}
+	
+	%=====================================================================
+	% 3. DATA
+	%=====================================================================
+	\section{Data}
+	VHLSS 2022 (16 modules, $N=9{,}383$ households) provides electricity consumption, income, demographics, and urban/rural indicators. TOU prices are from EVN and Decision 599/QD-EVN. Temperature data are obtained from the \textbf{World Bank Climate Knowledge Portal} \citep{worldbankclimate}, covering historical 2022 province-level data used to control for climatic effects on residential electricity demand. Population and income projections for 2025--2030 come from GSO Vietnam. Province adjacency matrices are used for Moran's I spatial tests.
+	
+	\begin{table}[H] 
+		\centering
+		\caption{Data Sources Used in the Study}
+		\label{tab:data_sources}
+		\begin{tabular}{lll}
+			\toprule
+			No. & Dataset & Source \\
+			\midrule
+			1 & VHLSS 2022 (Full 16 modules) & World Bank Microdata \\
+			2 & EVN TOU 2025 (Electricity Tariffs) & Vietnam Electricity (EVN), Decision 599 \\
+			3 & province\_energy\_panel\_2022.csv & Author compiled \\
+			4 & Province-level Temperature 2022 & World Bank Climate Knowledge Portal \\
+			5 & Population \& Income Projection 2025--2030 & General Statistics Office (GSO) Vietnam \\
+			6 & Province Spatial Adjacency Matrix & Author compiled \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	%=====================================================================
+	% 4. METHODOLOGY
+	%=====================================================================
+	\section{Methodology}
+	\subsection{2SLS Estimation}
+	To correct for endogeneity of electricity prices, 2SLS estimation is applied:
+	\[
+	\ln(Elec_i) = \beta_0 + \beta_1 \ln(Price_i) + \beta_2 \ln(Income_i) + \gamma X_i + \epsilon_i
+	\]
+	Regional average electricity prices serve as instruments.
+	
+	\subsection{QAIDS Estimation}
+	QAIDS is applied to model non-linear Engel curves and heterogeneity:
+	\[
+	w_{elec} = \alpha_0 + \gamma \ln p_{elec} + \beta \ln\left(\frac{x}{P}\right) + \lambda \left[\ln\left(\frac{x}{P}\right)\right]^2 + \delta_1 tou\_ratio + \delta_2 (tou\_ratio \times urban) + \theta temp + \epsilon
+	\]
+	
+	%=====================================================================
+	% 5. RESULTS
+	%=====================================================================
+	\section{Results}
+	
+	Table \ref{tab:results} summarizes the estimation results from both 2SLS and QAIDS models. Across specifications, the estimated own-price elasticity of residential electricity demand is -0.62**, indicating that a 1\% increase in electricity price reduces household electricity consumption by 0.62\% on average.
+	
+	The income elasticity of 0.38 suggests electricity is a normal good. The squared log-expenditure term $[\ln(x/P)]^2 = 0.12^{***}$ confirms convex Engel curve effects. The TOU-urban interaction coefficient of +0.18 indicates urban households are more responsive to TOU pricing. Main TOU effect is +0.31.
+	
+	\begin{table}[H]
+		\centering
+		\caption{2SLS and QAIDS Estimation Results}
+		\label{tab:results}
+		\begin{tabular}{lcc}
+			\toprule
+			Variable & 2SLS & QAIDS \\
+			\midrule
+			$\ln(p_{elec})$ & \textbf{-0.62}$^{***}$ & \textbf{-0.62}$^{***}$ \\
+			$\ln(x/P)$ & 0.42$^{***}$ & 0.38$^{***}$ \\
+			$[\ln(x/P)]^2$ & -- & \textbf{0.12}$^{***}$ \\
+			$tou\_ratio$ & -- & \textbf{+0.31}$^{***}$ \\
+			$tou\_ratio \times urban$ & -- & \textbf{+0.18}$^{***}$ \\
+			Temperature & -- & +0.05$^{**}$ \\
+			$N$ & 9,013 & 9,013 \\
+			First-stage F & 58.2 & -- \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	%=====================================================================
+	% 6. ELASTICITY AND WELFARE ANALYSIS
+	%=====================================================================
+	\section{Elasticity and Welfare Analysis}
+	
+	\subsection{Price and Income Elasticity by Income Quintile}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Estimated Price and Income Elasticities by Income Quintile}
+		\label{tab:elasticity_quintile}
+		\begin{tabular}{lcc}
+			\toprule
+			Income Quintile & Price Elasticity & Income Elasticity \\
+			\midrule
+			Q1 (Poorest)    & -0.48 & 0.45 \\
+			Q2              & -0.55 & 0.42 \\
+			Q3              & -0.60 & 0.39 \\
+			Q4              & -0.65 & 0.37 \\
+			Q5 (Richest)    & -0.70 & 0.50 \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Compensating Variation (CV) by Income Quintile}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Estimated Compensating Variation (CV) by Income Quintile (VND/Household/Month)}
+		\label{tab:cv_quintile}
+		\begin{tabular}{lcc}
+			\toprule
+			Income Quintile & CV (VND/Household/Month) & Relative Burden \\
+			\midrule
+			Q1 (Poorest)    & 122,000 & 2.1 \\
+			Q2              & 98,000  & 1.7 \\
+			Q3              & 72,000  & 1.2 \\
+			Q4              & 56,000  & 0.9 \\
+			Q5 (Richest)    & 44,000  & 0.8 \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	%=====================================================================
+	% 7. VISUALIZATION AND MODEL DIAGNOSTICS
+	%=====================================================================
+	\section{Residual Diagnostics}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Summary Statistics of QAIDS Residuals ($w_{elec}$)}
+		\begin{tabular}{lccccc}
+			\toprule
+			Variable & Obs & Mean & Std. Dev. & Min & Max \\
+			\midrule
+			resid\_w\_elec & 9,013 & 0.004894 & 0.585406 & -3.836 & 4.515 \\
+			\bottomrule
+		\end{tabular}		
+		\begin{tablenotes}
+			\small
+			\item Residual mean near zero indicates unbiased predictions. Moderate variability (Std. Dev = 0.585) and presence of outliers.
+		\end{tablenotes}
+	\end{table}
+	
+	%=====================================================================
+	% 8. POLICY SIMULATION 2025--2030
+	%=====================================================================
+	\section{Policy Simulation 2025--2030}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Dynamic TOU Scenarios and Impacts}
+		\label{tab:policy}
+		\begin{tabular}{lccc}
+			\toprule
+			Scenario & 2025 & 2027 & 2030 \\
+			\midrule
+			Peak Reduction & 12\% & 18\% & 25\% \\
+			EVN Revenue & +8\% & +12\% & +15\% \\
+			CO$_2$ Savings & 3M tons & 7M tons & 10M tons \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	%=====================================================================
+	% 9. APPENDIX: Detailed Regression Results
+	%=====================================================================
+	\clearpage
+	\section*{Appendix: QAIDS Regression Results}
+	\addcontentsline{toc}{section}{Appendix}
+	
+	\begin{table}[H]
+		\centering
+		\caption{QAIDS Regression Results by Income Quintile}
+		\begin{tabular}{lcccc}
+			\toprule
+			Variable & Q1 (Poorest) & Q2 & Q3 & Q5 (Richest) \\
+			\midrule
+			$\ln(p_{elec})$ & -0.55$^{***}$ & -0.60$^{***}$ & -0.61$^{***}$ & -0.62$^{***}$ \\
+			$\ln(x/P)$ & 0.31$^{***}$ & 0.36$^{***}$ & 0.38$^{***}$ & 0.50$^{***}$ \\
+			$tou\_ratio \times urban$ & 0.12$^{***}$ & 0.15$^{***}$ & 0.17$^{***}$ & 0.21$^{***}$ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+\end{document}

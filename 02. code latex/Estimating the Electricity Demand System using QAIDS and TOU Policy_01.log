@@ -1,0 +1,854 @@
+This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2025.10.5)  9 NOV 2025 02:32
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**"./Estimating the Electricity Demand System using QAIDS and TOU Policy_01.tex
+"
+(Estimating the Electricity Demand System using QAIDS and TOU Policy_01.tex
+LaTeX2e <2025-06-01> patch level 1
+L3 programming layer <2025-07-20>
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
+Document Class: article 2025/01/22 v1.4n Standard LaTeX document class
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\size12.clo
+File: size12.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count271
+\c@section=\count272
+\c@subsection=\count273
+\c@subsubsection=\count274
+\c@paragraph=\count275
+\c@subparagraph=\count276
+\c@figure=\count277
+\c@table=\count278
+\abovecaptionskip=\skip49
+\belowcaptionskip=\skip50
+\bibindent=\dimen148
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
+Package: inputenc 2024/02/08 v1.3d Input encoding file
+\inpenc@prehook=\toks17
+\inpenc@posthook=\toks18
+
+
+Package inputenc Warning: inputenc package ignored with utf8 based engines.
+
+) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty
+Package: fontenc 2024/12/21 v2.1c Standard LaTeX package
+LaTeX Font Info:    Trying to load font information for T1+lmr on input line 11
+6.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/lm\t1lmr.fd
+File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+Package: amsmath 2025/06/16 v2.17y AMS math features
+\@mathmargin=\skip51
+
+For additional information on amsmath, use the `?' option.
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
+Package: amstext 2024/11/17 v2.01 AMS text
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks19
+\ex@=\dimen149
+))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen150
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
+Package: amsopn 2022/04/08 v2.04 operator names
+)
+\inf@bad=\count279
+LaTeX Info: Redefining \frac on input line 233.
+\uproot@=\count280
+\leftroot@=\count281
+LaTeX Info: Redefining \overline on input line 398.
+LaTeX Info: Redefining \colon on input line 409.
+\classnum@=\count282
+\DOTSCASE@=\count283
+LaTeX Info: Redefining \ldots on input line 495.
+LaTeX Info: Redefining \dots on input line 498.
+LaTeX Info: Redefining \cdots on input line 619.
+\Mathstrutbox@=\box53
+\strutbox@=\box54
+LaTeX Info: Redefining \big on input line 721.
+LaTeX Info: Redefining \Big on input line 722.
+LaTeX Info: Redefining \bigg on input line 723.
+LaTeX Info: Redefining \Bigg on input line 724.
+\big@size=\dimen151
+LaTeX Font Info:    Redeclaring font encoding OML on input line 742.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 743.
+\macc@depth=\count284
+LaTeX Info: Redefining \bmod on input line 904.
+LaTeX Info: Redefining \pmod on input line 909.
+LaTeX Info: Redefining \smash on input line 939.
+LaTeX Info: Redefining \relbar on input line 969.
+LaTeX Info: Redefining \Relbar on input line 970.
+\c@MaxMatrixCols=\count285
+\dotsspace@=\muskip17
+\c@parentequation=\count286
+\dspbrk@lvl=\count287
+\tag@help=\toks20
+\row@=\count288
+\column@=\count289
+\maxfields@=\count290
+\andhelp@=\toks21
+\eqnshift@=\dimen152
+\alignsep@=\dimen153
+\tagshift@=\dimen154
+\tagwidth@=\dimen155
+\totwidth@=\dimen156
+\lineht@=\dimen157
+\@envbody=\toks22
+\multlinegap=\skip52
+\multlinetaggap=\skip53
+\mathdisplay@stack=\toks23
+LaTeX Info: Redefining \[ on input line 2949.
+LaTeX Info: Redefining \] on input line 2950.
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+)) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amscls\amsthm.sty
+Package: amsthm 2020/05/29 v2.20.6
+\thm@style=\toks24
+\thm@bodyfont=\toks25
+\thm@headfont=\toks26
+\thm@notefont=\toks27
+\thm@headpunct=\toks28
+\thm@preskip=\skip54
+\thm@postskip=\skip55
+\thm@headsep=\skip56
+\dth@everypar=\toks29
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty
+Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
+\heavyrulewidth=\dimen158
+\lightrulewidth=\dimen159
+\cmidrulewidth=\dimen160
+\belowrulesep=\dimen161
+\belowbottomsep=\dimen162
+\aboverulesep=\dimen163
+\abovetopsep=\dimen164
+\cmidrulesep=\dimen165
+\cmidrulekern=\dimen166
+\defaultaddspace=\dimen167
+\@cmidla=\count291
+\@cmidlb=\count292
+\@aboverulesep=\dimen168
+\@belowrulesep=\dimen169
+\@thisruleclass=\count293
+\@lastruleclass=\count294
+\@thisrulewidth=\dimen170
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
+Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks30
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
+Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.c
+fg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: xetex.def on input line 106.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\xetex.def
+File: xetex.def 2022/09/22 v5.0n Graphics/color driver for xetex
+))
+\Gin@req@height=\dimen171
+\Gin@req@width=\dimen172
+) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/natbib\natbib.sty
+Package: natbib 2010/09/13 8.31b (PWD, AO)
+\bibhang=\skip57
+\bibsep=\skip58
+LaTeX Info: Redefining \cite on input line 694.
+\c@NAT@ctr=\count295
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.sty
+Package: geometry 2020/01/02 v5.9 Page Geometry
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
+Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+Package: iftex 2024/12/12 v1.0g TeX engine tests
+))
+\Gm@cnth=\count296
+\Gm@cntv=\count297
+\c@Gm@tempcnt=\count298
+\Gm@bindingoffset=\dimen173
+\Gm@wd@mp=\dimen174
+\Gm@odd@mp=\dimen175
+\Gm@even@mp=\dimen176
+\Gm@layoutwidth=\dimen177
+\Gm@layoutheight=\dimen178
+\Gm@layouthoffset=\dimen179
+\Gm@layoutvoffset=\dimen180
+\Gm@dimlist=\toks31
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count299
+\float@exts=\toks32
+\float@box=\box55
+\@float@everytoks=\toks33
+\@floatcapt=\box56
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
+Package: caption 2023/08/05 v3.6o Customizing captions (AR)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty
+Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
+\caption@tempdima=\dimen181
+\captionmargin=\dimen182
+\caption@leftmargin=\dimen183
+\caption@rightmargin=\dimen184
+\caption@width=\dimen185
+\caption@indent=\dimen186
+\caption@parindent=\dimen187
+\caption@hangindent=\dimen188
+Package caption Info: Standard document class detected.
+)
+\c@caption@flags=\count300
+\c@continuedfloat=\count301
+Package caption Info: float package is loaded.
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
+Package: subcaption 2023/07/28 v1.6b Sub-captions (AR)
+Package caption Info: New subtype `subfigure' on input line 238.
+\c@subfigure=\count302
+Package caption Info: New subtype `subtable' on input line 238.
+\c@subtable=\count303
+) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/siunitx\siunitx.sty
+Package: siunitx 2025-07-09 v3.4.14 A comprehensive (SI) units package
+\l__siunitx_number_uncert_offset_int=\count304
+\l__siunitx_number_exponent_fixed_int=\count305
+\l__siunitx_number_min_decimal_int=\count306
+\l__siunitx_number_min_integer_int=\count307
+\l__siunitx_number_round_precision_int=\count308
+\l__siunitx_number_lower_threshold_int=\count309
+\l__siunitx_number_upper_threshold_int=\count310
+\l__siunitx_number_group_first_int=\count311
+\l__siunitx_number_group_size_int=\count312
+\l__siunitx_number_group_minimum_int=\count313
+\l__siunitx_angle_tmp_dim=\dimen189
+\l__siunitx_angle_marker_box=\box57
+\l__siunitx_angle_unit_box=\box58
+\l__siunitx_compound_count_int=\count314
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/translations\translatio
+ns.sty
+Package: translations 2022/02/05 v1.12 internationalization of LaTeX2e packages
+ (CN)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
+Package: etoolbox 2025/02/11 v2.5l e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count315
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds
+.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.s
+ty
+Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
+Package: ltxcmds 2023-12-04 v1.26 LaTeX kernel commands for general use (HO)
+)
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode not found.
+))
+\l__siunitx_table_tmp_box=\box59
+\l__siunitx_table_tmp_dim=\dimen190
+\l__siunitx_table_column_width_dim=\dimen191
+\l__siunitx_table_integer_box=\box60
+\l__siunitx_table_decimal_box=\box61
+\l__siunitx_table_uncert_box=\box62
+\l__siunitx_table_before_box=\box63
+\l__siunitx_table_after_box=\box64
+\l__siunitx_table_before_dim=\dimen192
+\l__siunitx_table_carry_dim=\dimen193
+\l__siunitx_unit_tmp_int=\count316
+\l__siunitx_unit_position_int=\count317
+\l__siunitx_unit_total_int=\count318
+ (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
+Package: array 2025/06/08 v2.6j Tabular extension package (FMi)
+\col@sep=\dimen194
+\ar@mcellbox=\box65
+\extrarowheight=\dimen195
+\NC@list=\toks34
+\extratabsurround=\skip59
+\backup@length=\skip60
+\ar@cellbox=\box66
+))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
+Package: hyperref 2025-07-12 v7.01o Hypertext links for LaTeX
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
+Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefine
+keys.sty
+Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.s
+ty
+Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
+) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty
+Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
+) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+Package: nameref 2025-06-21 v2.57 Cross-referencing by name of section
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty
+Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\gettit
+lestring.sty
+Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
+Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
+))
+\c@section@level=\count319
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.s
+ty
+Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
+)
+)
+\@linkdim=\dimen196
+\Hy@linkcounter=\count320
+\Hy@pagecounter=\count321
+ (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
+File: pd1enc.def 2025-07-12 v7.01o Hyperref: PDFDocEncoding definition (HO)
+) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
+Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
+)
+\Hy@SavedSpaceFactor=\count322
+ (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
+File: puenc.def 2025-07-12 v7.01o Hyperref: PDF Unicode definition (HO)
+)
+Package hyperref Info: Hyper figures OFF on input line 4195.
+Package hyperref Info: Link nesting OFF on input line 4200.
+Package hyperref Info: Hyper index ON on input line 4203.
+Package hyperref Info: Plain pages OFF on input line 4210.
+Package hyperref Info: Backreferencing OFF on input line 4215.
+Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
+Package hyperref Info: Bookmarks ON on input line 4462.
+\c@Hy@tempcnt=\count323
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
+\Urlmuskip=\muskip18
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 4801.
+\XeTeXLinkMargin=\dimen197
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcalc
+.sty
+Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
+)
+))
+\Fld@menulength=\count324
+\Field@Width=\dimen198
+\Fld@charsize=\dimen199
+Package hyperref Info: Hyper figures OFF on input line 6078.
+Package hyperref Info: Link nesting OFF on input line 6083.
+Package hyperref Info: Hyper index ON on input line 6086.
+Package hyperref Info: backreferencing OFF on input line 6093.
+Package hyperref Info: Link coloring OFF on input line 6098.
+Package hyperref Info: Link coloring with OCG OFF on input line 6103.
+Package hyperref Info: PDF/A mode OFF on input line 6108.
+\Hy@abspage=\count325
+\c@Item=\count326
+\c@Hfootnote=\count327
+)
+Package hyperref Info: Driver (autodetected): hxetex.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hxetex.def
+File: hxetex.def 2025-07-12 v7.01o Hyperref driver for XeTeX
+\pdfm@box=\box67
+\c@Hy@AnnotLevel=\count328
+\HyField@AnnotCount=\count329
+\Fld@listcount=\count330
+\c@bookmark@seq@number=\count331
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfil
+echeck.sty
+Package: rerunfilecheck 2025-06-21 v1.11 Rerun checks for auxiliary files (HO)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\uniquec
+ounter.sty
+Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
+)
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+84.
+)
+\Hy@SectionHShift=\skip61
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: xetex.def on input line 274.
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx)
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
+Package xcolor Info: Model `RGB' extended on input line 1365.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1367.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1368.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1369.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1370.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1371.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1372.
+) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/titlesec\titlesec.sty
+Package: titlesec 2025/01/04 v2.17 Sectioning titles
+\ttl@box=\box68
+\beforetitleunit=\skip62
+\aftertitleunit=\skip63
+\ttl@plus=\dimen256
+\ttl@minus=\dimen257
+\ttl@toksa=\toks35
+\titlewidth=\dimen258
+\titlewidthlast=\dimen259
+\titlewidthfirst=\dimen260
+) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/tocloft\tocloft.sty
+Package: tocloft 2017/08/31 v2.3i parameterised ToC, etc., typesetting
+Package tocloft Info: The document has section divisions on input line 51.
+\cftparskip=\skip64
+\cftbeforetoctitleskip=\skip65
+\cftaftertoctitleskip=\skip66
+\cftbeforepartskip=\skip67
+\cftpartnumwidth=\skip68
+\cftpartindent=\skip69
+\cftbeforesecskip=\skip70
+\cftsecindent=\skip71
+\cftsecnumwidth=\skip72
+\cftbeforesubsecskip=\skip73
+\cftsubsecindent=\skip74
+\cftsubsecnumwidth=\skip75
+\cftbeforesubsubsecskip=\skip76
+\cftsubsubsecindent=\skip77
+\cftsubsubsecnumwidth=\skip78
+\cftbeforeparaskip=\skip79
+\cftparaindent=\skip80
+\cftparanumwidth=\skip81
+\cftbeforesubparaskip=\skip82
+\cftsubparaindent=\skip83
+\cftsubparanumwidth=\skip84
+\cftbeforeloftitleskip=\skip85
+\cftafterloftitleskip=\skip86
+\cftbeforefigskip=\skip87
+\cftfigindent=\skip88
+\cftfignumwidth=\skip89
+\c@lofdepth=\count332
+\c@lotdepth=\count333
+\cftbeforelottitleskip=\skip90
+\cftafterlottitleskip=\skip91
+\cftbeforetabskip=\skip92
+\cfttabindent=\skip93
+\cfttabnumwidth=\skip94
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/fancyhdr\fancyhdr.sty
+Package: fancyhdr 2025/02/07 v5.2 Extensive control of page headers and footers
+
+\f@nch@headwidth=\skip95
+\f@nch@offset@elh=\skip96
+\f@nch@offset@erh=\skip97
+\f@nch@offset@olh=\skip98
+\f@nch@offset@orh=\skip99
+\f@nch@offset@elf=\skip100
+\f@nch@offset@erf=\skip101
+\f@nch@offset@olf=\skip102
+\f@nch@offset@orf=\skip103
+\f@nch@height=\skip104
+\f@nch@footalignment=\skip105
+\f@nch@widthL=\skip106
+\f@nch@widthC=\skip107
+\f@nch@widthR=\skip108
+\@temptokenb=\toks36
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/setspace\setspace.sty
+Package: setspace 2022/12/04 v6.7b set line spacing
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/pdflscape\pdflscape.sty
+Package: pdflscape 2022-10-27 v0.13 Display of landscape pages in PDF
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/pdflscape\pdflscape-nom
+etadata.sty
+Package: pdflscape-nometadata 2022-10-28 v0.13 Display of landscape pages in PD
+F (HO)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\lscape.sty
+Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
+)
+Package pdflscape Info: Auto-detected driver: dvipdfm (xetex) on input line 98.
+
+))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty
+Package: longtable 2024-12-18 v4.23 Multi-page Table package (DPC)
+\LTleft=\skip109
+\LTright=\skip110
+\LTpre=\skip111
+\LTpost=\skip112
+\LTchunksize=\count334
+\LTcapwidth=\dimen261
+\LT@head=\box69
+\LT@firsthead=\box70
+\LT@foot=\box71
+\LT@lastfoot=\box72
+\LT@gbox=\box73
+\LT@cols=\count335
+\LT@rows=\count336
+\c@LT@tables=\count337
+\c@LT@chunks=\count338
+\LT@p@ftn=\toks37
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\rotating.sty
+Package: rotating 2025/01/14 v2.16e rotated objects in LaTeX
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
+Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
+)
+\c@r@tfl@t=\count339
+\rotFPtop=\skip113
+\rotFPbot=\skip114
+\rot@float@box=\box74
+\rot@mess@toks=\toks38
+)
+Package translations Info: No language package found. I am going to use `englis
+h' as default language. on input line 57.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-xet
+ex.def
+File: l3backend-xetex.def 2025-06-09 L3 backend support: XeTeX
+\g__graphics_track_int=\count340
+\g__pdfannot_backend_int=\count341
+\g__pdfannot_backend_link_int=\count342
+)
+(Estimating the Electricity Demand System using QAIDS and TOU Policy_01.aux)
+\openout1 = `"Estimating the Electricity Demand System using QAIDS and TOU Poli
+cy_01.aux"'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 57.
+LaTeX Font Info:    ... okay on input line 57.
+
+*geometry* driver: auto-detecting
+*geometry* detected driver: xetex
+*geometry* verbose mode - [ preamble ] result:
+* driver: xetex
+* paper: a4paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(72.26999pt, 452.9679pt, 72.26999pt)
+* v-part:(T,H,B)=(72.26999pt, 700.50687pt, 72.26999pt)
+* \paperwidth=597.50787pt
+* \paperheight=845.04684pt
+* \textwidth=452.9679pt
+* \textheight=700.50687pt
+* \oddsidemargin=0.0pt
+* \evensidemargin=0.0pt
+* \topmargin=-37.0pt
+* \headheight=15.0pt
+* \headsep=25.0pt
+* \topskip=12.0pt
+* \footskip=30.0pt
+* \marginparwidth=35.0pt
+* \marginparsep=10.0pt
+* \columnsep=10.0pt
+* \skip\footins=10.8pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: hyperref package is loaded.
+Package caption Info: longtable package is loaded.
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\ltcaption.sty
+Package: ltcaption 2021/01/08 v1.4c longtable captions (AR)
+)
+Package caption Info: rotating package is loaded.
+Package caption Info: End \AtBeginDocument code.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tran
+slations-basic-dictionary-english.trsl
+File: translations-basic-dictionary-english.trsl (english translation file `tra
+nslations-basic-dictionary')
+)
+Package translations Info: loading dictionary `translations-basic-dictionary' f
+or `english'. on input line 57.
+Package hyperref Info: Link coloring OFF on input line 57.
+
+(Estimating the Electricity Demand System using QAIDS and TOU Policy_01.out)
+(Estimating the Electricity Demand System using QAIDS and TOU Policy_01.out)
+\@outlinefile=\write3
+\openout3 = `"Estimating the Electricity Demand System using QAIDS and TOU Poli
+cy_01.out"'.
+
+LaTeX Font Info:    Trying to load font information for U+msa on input line 60.
+
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 60.
+
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+Overfull \hbox (6.06543pt too wide) in paragraph at lines 60--60
+ [][] 
+ []
+
+(Estimating the Electricity Demand System using QAIDS and TOU Policy_01.toc
+
+[1
+
+])
+\tf@toc=\write4
+\openout4 = `"Estimating the Electricity Demand System using QAIDS and TOU Poli
+cy_01.toc"'.
+
+
+
+[2]
+
+[3]
+Overfull \hbox (35.92943pt too wide) in paragraph at lines 147--159
+ [][] 
+ []
+
+
+
+[4]
+Overfull \hbox (20.39386pt too wide) detected at line 176
+\OML/cmm/m/it/12 w[] \OT1/cmr/m/n/12 = \OML/cmm/m/it/12 ^^K[] \OT1/cmr/m/n/12 +
+ \OML/cmm/m/it/12 ^^M [] p[] \OT1/cmr/m/n/12 + \OML/cmm/m/it/12 ^^L [] [] \OT1/
+cmr/m/n/12 + \OML/cmm/m/it/12 ^^U [][] \OT1/cmr/m/n/12 + \OML/cmm/m/it/12 ^^N[]
+tou[]ratio \OT1/cmr/m/n/12 + \OML/cmm/m/it/12 ^^N[]\OT1/cmr/m/n/12 (\OML/cmm/m/
+it/12 tou[]ratio \OMS/cmsy/m/n/12 ^^B \OML/cmm/m/it/12 urban\OT1/cmr/m/n/12 ) +
+ \OML/cmm/m/it/12 ^^Rtemp \OT1/cmr/m/n/12 + \OML/cmm/m/it/12 ^^O
+ []
+
+
+
+[5]
+
+[6]
+
+[7]
+Missing character: There is no – in font ec-lmr12!
+Missing character: There is no – in font ec-lmr12!
+
+
+[8]
+
+! LaTeX Error: Environment threeparttable undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.302 ^^I^^I\begin{threeparttable}
+                                  
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+! LaTeX Error: Environment tablenotes undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.316 ^^I^^I^^I\begin{tablenotes}
+                                 
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+Overfull \hbox (140.34032pt too wide) in paragraph at lines 305--318
+ [][] 
+ []
+
+
+! LaTeX Error: Lonely \item--perhaps a missing list environment.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.318 ^^I^^I^^I^^I\item T
+                         OU × Urban indicates the estimated responsiveness o...
+
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Underfull \hbox (badness 10000) detected at line 318
+[][]
+ []
+
+
+! LaTeX Error: Lonely \item--perhaps a missing list environment.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.319 ^^I^^I^^I^^I\item C
+                         ompensating Variation reflects welfare impact of a ...
+
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Underfull \hbox (badness 10000) detected at line 319
+[][]
+ []
+
+
+! LaTeX Error: Lonely \item--perhaps a missing list environment.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.320 ^^I^^I^^I^^I\item P
+                         rice elasticity decreases with income, indicating h...
+
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Underfull \hbox (badness 10000) detected at line 320
+[][]
+ []
+
+
+! LaTeX Error: \begin{table} on input line 300 ended by \end{tablenotes}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.321 ^^I^^I^^I\end{tablenotes}
+                               
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+! LaTeX Error: \begin{table} on input line 300 ended by \end{threeparttable}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.322 ^^I^^I\end{threeparttable}
+                                
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+Missing character: There is no – in font ec-lmr12!
+Missing character: There is no – in font ec-lmr12!
+
+
+[9]
+Missing character: There is no ’ in font ec-lmr12!
+
+
+[10]
+
+[11]
+
+[12]
+
+[13
+
+]
+(Estimating the Electricity Demand System using QAIDS and TOU Policy_01.bbl
+
+[14
+
+]
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 8
+8.
+ (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/lm\t1lmtt.fd
+File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+))
+
+[15]
+(Estimating the Electricity Demand System using QAIDS and TOU Policy_01.aux)
+ ***********
+LaTeX2e <2025-06-01> patch level 1
+L3 programming layer <2025-07-20>
+ ***********
+Package rerunfilecheck Info: File `"Estimating the Electricity Demand System us
+ing QAIDS and TOU Policy_01".out' has not changed.
+(rerunfilecheck)             Checksum: <no file>.
+ ) 
+Here is how much of TeX's memory you used:
+ 17729 strings out of 403250
+ 334643 string characters out of 5460888
+ 724192 words of memory out of 5000000
+ 45995 multiletter control sequences out of 15000+600000
+ 684287 words of font info for 99 fonts, out of 8000000 for 9000
+ 1348 hyphenation exceptions out of 8191
+ 73i,12n,80p,751b,1055s stack positions out of 10000i,1000n,20000p,200000b,200000s
+
+Output written on Estimating the Electricity Demand System using QAIDS and TOU 
+Policy_01.pdf (15 pages).

@@ -1,0 +1,33 @@
+------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  D:\01. HOC HANH\13. thac si ueh\05. MON HOC\HOC KY 2\03. Phân tích hành vi người tiêu dùng_Mr. Thuy\06. du 
+> an cuoi ky\00. File log\OUTPUT\QAIDS_TOU_MASTER.log
+  log type:  text
+ opened on:   8 Nov 2025, 14:20:57
+
+. display as result "BẮT ĐẦU XỬ LÝ – THỜI GIAN: " c(current_time)
+BẮT ĐẦU XỬ LÝ – THỜI GIAN: 14:20:57
+
+. 
+. *=====================================================================
+. * 1. NẠP & CHUẨN HÓA VHLSS 2022
+. *=====================================================================
+. use "B27_Ho_ThongTinHo.dta", clear
+
+. 
+. * Chuẩn hóa ID & tỉnh
+. destring MATINH KYDIEUTRA, replace force
+MATINH: all characters numeric; replaced as byte
+KYDIEUTRA already numeric; no replace
+
+. rename (MATINH KYDIEUTRA) (tinh month)
+
+. gen IDHO = _n if missing(IDHO)  // Dự phòng
+variable IDHO already defined
+r(110);
+
+end of do-file
+
+r(110);
+
+. exit, clear

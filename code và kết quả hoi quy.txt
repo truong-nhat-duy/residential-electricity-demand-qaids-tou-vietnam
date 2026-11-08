@@ -1,0 +1,3288 @@
+*******************************************************
+* FILE NAME :  UOC_LUONG_QAIDS_TOU.do
+* PROJECT   :  Estimating the Electricity Demand System using QAIDS and TOU Policy
+* AUTHOR    :  Truong Nhat Duy
+* UNIVERSITY:  University of Economics Ho Chi Minh City (UEH)
+* DATA      :  VHLSS 2022, EVN TOU 2025, GSO CPI, World Bank Climate Knowledge Portal
+*******************************************************
+*------------------------------------------------------*
+* Thiết lập môi trường làm việc
+*------------------------------------------------------*
+clear all
+set more off
+set linesize 120
+capture log close
+log using "QAIDS_TOU_2022.log", replace text
+
+* === Thiết lập đường dẫn làm việc ===
+local dir `c(pwd)'
+
+*******************************************************
+* NẠP FILE GHÉP NỐI FILE
+*******************************************************
+*******************************************************
+* BƯỚC 1: NẠP FILE VHLSS HỘ GIA ĐÌNH
+*******************************************************
+use "B27_Ho_ThongTinHo.dta", clear
+* --- Chuẩn hóa biến tỉnh và tháng ---
+destring MATINH, replace force
+destring KYDIEUTRA, replace force
+* --- Loại bỏ các giá trị điện <=0 và tính trung bình hàng tháng ---
+keep if M7_C17 > 0
+gen elec_vnd_monthly = M7_C17 / 12
+* Kiểm tra dữ liệu
+summarize elec_vnd_monthly
+duplicates report IDHO
+sort IDHO
+* Lưu file trung gian
+tempfile VHLSS_clean
+save "VHLSS_clean.dta", replace
+
+*******************************************************
+* BƯỚC 2: GHÉP GIÁ ĐIỆN CPI 2022
+*******************************************************
+* --- Chuẩn hóa file CPI ---
+use "CPI_energy_2022.dta", clear
+describe
+rename tinh MATINH
+rename month KYDIEUTRA
+destring MATINH, replace force
+destring KYDIEUTRA, replace force
+* Lưu file đã chuẩn hóa
+save "CPI_energy_clean.dta", replace
+
+* --- Quay lại dữ liệu VHLSS ---
+use "VHLSS_clean.dta", clear
+
+* Merge với CPI
+merge m:1 MATINH KYDIEUTRA using "CPI_energy_clean.dta"
+
+* Kiểm tra kết quả merge
+tab _merge
+list MATINH KYDIEUTRA elec_vnd_monthly if _merge==1, sepby(MATINH)
+
+* Lưu file trung gian sau merge CPI
+tempfile VHLSS_CPI
+save "VHLSS_CPI.dta", replace
+describe
+
+*******************************************************
+* BƯỚC 3: GHÉP NHIỆT ĐỘ 2022
+*******************************************************
+* --- Chuẩn hóa file nhiệt độ ---
+use "vietnam_temp_2022.dta", clear
+rename temperature_avg_month temp_avg
+destring MATINH, replace force
+destring KYDIEUTRA, replace force
+save "vietnam_temp_2022_clean.dta", replace
+* --- Quay lại dữ liệu VHLSS đã ghép CPI ---
+use "VHLSS_CPI.dta", clear
+* Merge nhiệt độ
+drop _merge
+merge m:1 MATINH KYDIEUTRA using "vietnam_temp_2022_clean.dta"
+* Kiểm tra merge
+tab _merge
+list MATINH KYDIEUTRA temp_avg if _merge==1, sepby(MATINH)
+* Kiểm tra tổng quan nhiệt độ
+summarize temp_avg
+* Lưu file cuối cùng
+save "VHLSS2022_energy_temp_final.dta", replace
+
+******************************************************
+* 1. Thống kê nhanh các biến số
+******************************************************
+describe
+summarize
+summarize, detail  // chi tiết min, max, mean, sd
+
+******************************************************
+* 1. Thống kê nhanh các biến số quan trọng
+******************************************************
+* Kiểm tra thông tin cơ bản của các biến
+describe elec_vnd_monthly TONGCHITIEU TONGTHU p_elec TTNT
+* Thống kê tóm tắt và chi tiết để kiểm tra min, max, mean, sd
+summarize elec_vnd_monthly TONGCHITIEU TONGTHU p_elec, detail
+
+*******************************************************
+* CHUẨN HÓA DỮ LIỆU & TẠO BIẾN CẦN THIẾT CHO MÔ HÌNH HỒI QUY
+*******************************************************
+* Chuẩn hóa chi tiêu, thu nhập hộ gia đình về VND:
+* TONGCHITIEU và TONGTHU hiện đang là giá trị năm quy về tháng:
+gen TONGCHITIEU_monthly = TONGCHITIEU / 12
+
+gen TONGTHU_monthly = TONGTHU / 12
+
+* Chuẩn hóa về VND (trường hợp gốc là nghìn đồng)
+* (Ghi chú: Trong VHLSS 2022, TONGCHITIEU và TONGTHU  DVT: 1.000 VND/năm)
+gen TONGCHITIEU_monthly_VND = TONGCHITIEU_monthly * 1000
+
+gen TONGTHU_monthly_VND = TONGTHU_monthly * 1000
+
+replace elec_vnd_monthly = elec_vnd_monthly * 1000
+
+******************************************************
+* Tạo tỷ trọng chi tiêu điện (w_elec)
+******************************************************
+* Vì chi tiêu điện là hàng tháng, nên cần quy đổi về cùng đơn vị với chi tiêu năm
+* Tạo w_elec = tỷ lệ điện của từng hộ:Tỷ trọng chi tiêu điện hàng tháng
+replace w_elec = elec_vnd_monthly / TONGCHITIEU_monthly_VND
+gen w_other = 1 - w_elec
+gen ln_w_elec = ln(w_elec)
+
+* Kiểm tra biến vừa tạo
+summarize elec_vnd_monthly TONGCHITIEU_monthly_VND TONGTHU_monthly_VND w_elec w_other
+
+******************************************************
+* 2.1. Tạo biến giá điện và lượng điện tiêu thụ
+* tính và tạo biến lượng điện tiêu thụ (kwh/Tháng):
+******************************************************
+* Ước tính điện năng tiêu thụ (kWh/tháng) từ tiền điện từ Biểu giá điện sinh hoạt EVN năm 2022 bậc thang
+******************************************************
+******************************************************
+* TÍNH NGƯỢC LƯỢNG ĐIỆN TIÊU THỤ (kWh/tháng) TỪ TIỀN ĐIỆN
+******************************************************
+
+* 1. Khai báo giá điện bậc thang
+local p1 = 1728
+local p2 = 1786
+local p3 = 2074
+local p4 = 2612
+local p5 = 2919
+local p6 = 3015
+
+* 2. Khai báo ngưỡng cộng dồn tiền từng bậc (đúng theo tổng tiền tích lũy đến hết mỗi bậc)
+local t1 = 50 * `p1'
+local t2 = `t1' + 50 * `p2'
+local t3 = `t2' + 100 * `p3'
+local t4 = `t3' + 100 * `p4'
+local t5 = `t4' + 100 * `p5'
+
+* 3. Khởi tạo biến kết quả
+replace elec_kwh = .
+
+* 4. Tính lượng điện tiêu thụ theo tiền điện từng bậc:
+replace elec_kwh = cond(elec_vnd_monthly <= `t1', elec_vnd_monthly / `p1', 50)
+replace elec_kwh = cond(elec_vnd_monthly > `t1' & elec_vnd_monthly <= `t2', 50 + (elec_vnd_monthly - `t1') / `p2', elec_kwh)
+replace elec_kwh = cond(elec_vnd_monthly > `t2' & elec_vnd_monthly <= `t3', 100 + (elec_vnd_monthly - `t2') / `p3', elec_kwh)
+replace elec_kwh = cond(elec_vnd_monthly > `t3' & elec_vnd_monthly <= `t4', 200 + (elec_vnd_monthly - `t3') / `p4', elec_kwh)
+replace elec_kwh = cond(elec_vnd_monthly > `t4' & elec_vnd_monthly <= `t5', 300 + (elec_vnd_monthly - `t4') / `p5', elec_kwh)
+replace elec_kwh = cond(elec_vnd_monthly > `t5', 400 + (elec_vnd_monthly - `t5') / `p6', elec_kwh)
+
+* 5. Kiểm tra kết quả
+summ elec_kwh, detail
+summarize elec_kwh, detail
+* Kiểm tra các hộ cực đại
+list elec_vnd_monthly elec_kwh if elec_kwh > 10000
+
+histogram elec_kwh, width(50) frequency title("Histogram: Lượng điện tiêu thụ (kWh)")
+
+* Boxplot cho lượng điện tiêu thụ
+graph box elec_kwh, title("Boxplot: Lượng điện tiêu thụ (kWh/tháng)") ytitle("kWh") 
+
+graph box elec_kwh if elec_kwh < 5000, title("Boxplot: Lượng điện tiêu thụ <5000 kWh")
+
+* sau khi kiểm tra thì có nhiều hộ dùng điện cao bất thường, xử lý biến outlier và so sánh:
+* Xác định percentile 99
+summarize elec_kwh, detail
+local p99 = r(p99)
+* Winsorize: giới hạn giá trị trên percentile 99
+replace elec_kwh = `p99' if elec_kwh > `p99'
+* Hoặc loại bỏ hoàn toàn các hộ cực đại
+drop if elec_kwh > 10000
+
+******************************************************
+* TẠO BIẾN GIÁ ĐIỆN (VND/Tháng):
+******************************************************
+******************************************************
+* (A) GIÁ TRUNG BÌNH (Average Price - AP)
+******************************************************
+gen price_ap = elec_vnd_monthly / elec_kwh
+replace price_ap = . if price_ap <= 0 | price_ap > 10000   // loại giá bất hợp lý
+gen ln_price_ap = ln(price_ap)
+
+* Tạo giá trung bình trong tỉnh (Average price by province)
+bysort MATINH: egen avg_price_prov = mean(price_ap)
+gen ln_avg_price_prov = ln(avg_price_prov)
+
+* Loại hộ i ra khỏi trung bình (Instrument cho IV)
+bysort MATINH: egen total_price_ap = total(price_ap)
+bysort MATINH: egen n_ap = count(price_ap)
+gen avg_price_excl_ap = (total_price_ap - price_ap) / (n_ap - 1)
+gen ln_avg_price_excl_ap = ln(avg_price_excl_ap)
+
+******************************************************
+* (B) GIÁ CẬN BIÊN (Marginal Price - MP)
+******************************************************
+gen price_mp = .
+replace price_mp = 1728 if elec_kwh <= 50
+replace price_mp = 1786 if elec_kwh > 50 & elec_kwh <= 100
+replace price_mp = 2074 if elec_kwh > 100 & elec_kwh <= 200
+replace price_mp = 2612 if elec_kwh > 200 & elec_kwh <= 300
+replace price_mp = 2919 if elec_kwh > 300 & elec_kwh <= 400
+replace price_mp = 3015 if elec_kwh > 400
+gen ln_price_mp = ln(price_mp)
+
+* Tạo IV cho MP: trung bình tỉnh loại hộ i
+bysort MATINH: egen total_price_mp = total(price_mp)
+bysort MATINH: egen n_mp = count(price_mp)
+gen avg_price_excl_mp = (total_price_mp - price_mp) / (n_mp - 1)
+gen ln_avg_price_excl_mp = ln(avg_price_excl_mp)
+
+******************************************************
+* thống kê nhanh:
+summarize elec_kwh price_ap price_mp ln_price_ap ln_price_mp ln_avg_price_excl_ap ln_avg_price_excl_mp
+summarize elec_kwh, detail
+summarize ln_price_ap, detail
+summarize ln_price_mp, detail
+
+* Winsorize elec_kwh
+summarize elec_kwh, detail
+local p1 = r(p1)
+local p99 = r(p99)
+gen elec_kwh_w = elec_kwh
+replace elec_kwh_w = `p1' if elec_kwh < `p1'
+replace elec_kwh_w = `p99' if elec_kwh > `p99'
+
+* Winsorize ln_price_ap
+summarize ln_price_ap, detail
+local p1 = r(p1)
+local p99 = r(p99)
+gen ln_price_ap_w = ln_price_ap
+replace ln_price_ap_w = `p1' if ln_price_ap < `p1'
+replace ln_price_ap_w = `p99' if ln_price_ap > `p99'
+
+* Winsorize ln_price_mp
+summarize ln_price_mp, detail
+local p1 = r(p1)
+local p99 = r(p99)
+gen ln_price_mp_w = ln_price_mp
+replace ln_price_mp_w = `p1' if ln_price_mp < `p1'
+replace ln_price_mp_w = `p99' if ln_price_mp > `p99'
+
+summarize ln_avg_price_excl_mp 
+histogram ln_avg_price_excl_mp, percent normal title("Histogram ln_avg_price_excl_mp")
+
+* đồ thị các biến giá
+summarize ln_avg_price_excl_ap 
+histogram ln_avg_price_excl_ap, percent normal title("Histogram ln_avg_price_excl_ap")
+
+histogram price_ap, percent normal title("Histogram price_ap")
+
+histogram price_mp, percent normal title("Histogram price_mp")
+
+histogram ln_price_mp, percent normal ///
+    title("Histogram ln_price_mp") ///
+     xlabel(, grid)
+	
+histogram ln_price_ap, percent normal ///
+    title("Histogram ln_price_ap") ///
+    xlabel(, grid)
+
+******************************************************
+* 3. Tạo biến log (phục vụ mô hình QAIDS/2SLS)
+******************************************************
+* Tạo các biến log:
+gen ln_kwh = ln(elec_kwh) if elec_kwh > 0
+
+* Vẽ histogram ln_kwh với đường mật độ chuẩn
+histogram ln_kwh, width(0.2) normal ///
+    frequency ///
+    title("Histogram: Phân phối ln_kwh") ///
+    xlabel(, grid)
+	
+* đồ thị Histogram phân phối log (kiểm tra lại phân phối)	
+kdensity ln_kwh, title("Density plot: ln_kwh") xtitle("ln(kWh)") ytitle("Density")
+
+* đồ thị Boxplot log điện tiêu thụ:
+graph box ln_kwh, title("Boxplot: ln_kWh") ytitle("ln(kWh)")
+
+*  tạo biến ln_income
+gen ln_income = ln(TONGTHU_monthly_VND) if TONGTHU_monthly_VND > 0
+
+* Tạo biến ln_expenditure
+
+gen ln_expenditure = ln(TONGCHITIEU_monthly_VND) if TONGCHITIEU_monthly_VND > 0
+
+* Tạo biến ln_price
+gen ln_x_P = ln_expenditure - ln_price_ap
+
+* Tạo thành phần bình phương
+gen ln_x_P_sq = ln_x_P^2
+
+* Kiểm tra:
+sum ln_kwh ln_price_ap ln_income ln_expenditure ln_x_P ln_x_P_sq
+
+******************************************************
+* 4. Tạo biến phân loại khu vực (urban/rural) (1 = Urban, 0 = Rural)
+******************************************************
+* Tạo biến numeric urban 
+gen urban = (TTNT == 1)
+* Đảm bảo urban là numeric (byte)
+destring urban, replace force   // không bắt buộc nếu đã là numeric
+* Gán nhãn
+label define urban_lbl 0 "Rural" 1 "Urban"
+label values urban urban_lbl
+* Kiểm tra biến vừa tạo
+tab urban
+codebook urban
+
+******************************************************
+* 5. TẠO BIẾN VÙNG THEO CHUẨN VHLSS 2022
+* Biến tham chiếu: Red River Delta = 0
+******************************************************
+* --- Khởi tạo biến region ---
+gen region = .   // mặc định missing
+
+* Red River Delta (Đồng bằng sông Hồng): 1–11
+replace region = 0 if inlist(MATINH,1,2,3,4,5,6,7,8,9,10,11)
+* Northern Midlands & Mountains: 12–21
+replace region = 1 if inlist(MATINH,12,13,14,15,16,17,18,19,20,21)
+* North Central & Central Coastal: 22–40
+replace region = 2 if inlist(MATINH,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40)
+* Central Highlands: 41–45
+replace region = 3 if inlist(MATINH,41,42,43,44,45,67)
+* Southeast (Đông Nam Bộ): 46–52, 62,64,65,66,68,70,79,80
+replace region = 4 if inlist(MATINH,46,47,48,49,50,51,52,62,64,65,66,68,70,79,80)
+* Mekong Delta: 53–63,72,74,75,77,82,83,84,86,87,89,91,92,93,94,95,96
+replace region = 5 if inlist(MATINH,53,54,55,56,57,58,59,60,61,63,72,74,75,77,82,83,84,86,87,89,91,92,93,94,95,96)
+* Unknown / Foreign: 98
+replace region = 6 if MATINH==98
+* --- Gán nhãn cho biến region ---
+label define region_lbl 0 "Red River Delta (reference)" ///
+                        1 "Northern Midlands & Mountains" ///
+                        2 "North Central & Central Coastal" ///
+                        3 "Central Highlands" ///
+                        4 "Southeast" ///
+                        5 "Mekong Delta" ///
+                        6 "Unknown/Foreign"
+label values region region_lbl
+* --- Kiểm tra phân bố ---
+tab region, missing
+codebook region
+
+list MATINH region if region==.
+
+******************************************************
+* 6. TẠO BIẾN MÙA VỤ (MÙA KHÔ = 1, MÙA MƯA = 0)
+******************************************************
+gen dry_season = .
+replace dry_season = 1 if inlist(KYDIEUTRA, 12,1,2,3,4,5)   // tháng mùa khô
+replace dry_season = 0 if inlist(KYDIEUTRA, 6,7,8,9,10,11)  // tháng mùa mưa
+label define dry_lbl 0 "Wet season" 1 "Dry season"
+label values dry_season dry_lbl
+
+* Kiểm tra
+tab dry_season
+codebook dry_season
+
+******************************************************
+* 7. TẠO BIẾN SEASON 4 MÙA (SPRING–WINTER)
+******************************************************
+gen season = .
+replace season = 1 if KYDIEUTRA>=1 & KYDIEUTRA<=3      // Spring
+replace season = 2 if KYDIEUTRA>=4 & KYDIEUTRA<=6      // Summer
+replace season = 3 if KYDIEUTRA>=7 & KYDIEUTRA<=9      // Autumn
+replace season = 0 if KYDIEUTRA>=10 & KYDIEUTRA<=12    // Winter
+label define season_lbl 1 "Spring" 2 "Summer" 3 "Autumn" 0 "Winter"
+label values season season_lbl
+
+tab season
+codebook season
+
+******************************************************
+* 8. TẠO BIẾN NHÓM THU NHẬP ((Q1–Q5))
+******************************************************
+* Divide income (ln_income) into 5 quintiles
+xtile income_group = ln_income, n(5)
+* Gán nhãn ý nghĩa cho từng nhóm
+* Label each quintile
+label define income_lbl ///
+    1 "Q1 (Poorest)" ///
+    2 "Q2" ///
+    3 "Q3 (Middle)" ///
+    4 "Q4" ///
+    5 "Q5 (Richest)"
+
+label values income_group income_lbl
+tab income_group
+
+* đặt lại tên nhóm: 
+gen income_class = .
+replace income_class = 1 if income_group == 1    // Q1 - Poorest
+replace income_class = 2 if income_group == 2    // Q2
+replace income_class = 0 if income_group == 3    // Q3 - Baseline
+replace income_class = 3 if income_group == 4    // Q4
+replace income_class = 4 if income_group == 5    // Q5 - Richest
+label define class_lbl ///
+    0 "Q3 (Baseline)" ///
+    1 "Q1 (Poorest)" ///
+    2 "Q2" ///
+    3 "Q4" ///
+    4 "Q5 (Richest)"
+label values income_class class_lbl
+
+tab income_class
+
+********************************************************
+* 9. TẠO BIẾN GIÁ TOU - giá cao điểm theo Thí điểm Hà Nội & TP.HCM (PILOT):
+*******************************************************
+* urban = 1 cho TP. HCM và Hà Nội, 0 các tỉnh khác
+replace tou_ratio = 0
+replace tou_ratio = 0.4 if MATINH==1    // Hà Nội theo VHLSS
+replace tou_ratio = 0.4 if MATINH==79   // TP. HCM theo VHLSS
+gen tou_urban = tou_ratio
+gen tou_urbanXurban = tou_urban * urban
+* Kiểm tra
+tab tou_urban
+tab tou_ratio
+summarize tou_ratio
+
+* Giá khung giờ: theo Quyết định 599/QĐ-EVN, 2025: 
+
+gen price_peak = 2934  /// 2,934 VND/kWh
+
+gen price_normal = 1659 /// 1,659 VND/kWh
+
+gen price_offpeak = 1022 /// 1,022 VND/kWh
+
+* Giá trung bình theo TOU
+gen price_tou = tou_urban*price_peak + (1-tou_urban)*price_normal
+gen ln_price_tou = ln(price_tou)
+
+********************************************************
+* 10. Tạo thêm biến công cụ (IV): IV 2: Giá gas, IV 3: Nhiệt độ trung bình tỉnh
+*******************************************************
+* IV 2: Giá gas tỉnh (exogenous)
+bysort MATINH: egen avg_gas_prov = mean(gas_price)
+gen ln_gas_prov = ln(avg_gas_prov)
+
+* IV 3: Nhiệt độ trung bình tỉnh
+bysort MATINH: egen temp_prov = mean(temp_avg)
+
+* TÍNH kWh CAO ĐIỂM & THẤP ĐIỂM
+gen elec_kwh_peak = elec_kwh * tou_ratio
+gen elec_kwh_offpeak = elec_kwh * (1 - tou_ratio)
+
+* TÍNH HÓA ĐƠN TOU
+gen elec_vnd_TOU = elec_kwh_peak * price_peak + elec_kwh_offpeak * price_offpeak
+
+*******************************************************
+* 11. TẠO BIẾN CHÍNH PHÂN TÍCH QAIDS
+*******************************************************
+* tạo biến giá trung bình có trọng số theo chi tiêu năng lượng chi tiêu cho điện và năng lượng thay thế (gas).
+* dùng trong mô hình QAIDS (Quadratic Almost Ideal Demand System):
+
+gen ln_P = w_elec * ln_avg_price_excl_ap + (1 - w_elec) * ln(gas_price)
+
+* Tạo Biến bình phương nhiệt độ
+gen temp_sq = temp_avg^2
+
+* Đổi tên cho MATINH:
+rename MATINH tinh
+
+* Kiểm tra số quan sát missing cho các biến chính trước khi chạy mô hình:
+misstable summarize elec_vnd_monthly elec_kwh ln_kwh temp_avg temp_sq price_ap price_mp ln_price_ap ln_price_mp ln_avg_price_excl_ap ln_avg_price_excl_mp ln_expenditure ln_x_P ln_x_P_sq w_elec tou_ratio 
+
+summarize ln_kwh ln_income ln_w_elec urban temp_avg temp_sq price_ap price_mp ln_price_ap ln_price_mp
+
+* Loại bỏ quan sát missing
+drop if missing(ln_price_ap)
+
+* Histogram ln_kwh
+histogram ln_kwh, width(0.2) frequency ///
+    title("Histogram ln_kwh") ///
+    xlabel(, grid)
+
+* Histogram ln_income
+histogram ln_income, width(0.2) frequency ///
+    title("Histogram ln_income") ///
+    xlabel(, grid)
+
+* Histogram ln_w_elec
+histogram ln_w_elec, width(0.2) frequency ///
+    title("Histogram ln_w_elec") ///
+    xlabel(, grid)
+
+******************************************************
+* CHUẨN HÓA BIẾN NHIỆT ĐỘ - MEAN CENTERED
+******************************************************
+
+* Tính trung bình nhiệt độ
+summ temp_avg
+gen temp_centered = temp_avg - r(mean)
+gen temp_sq_centered = temp_centered^2
+
+* Kiểm tra lại
+summ temp_avg temp_centered temp_sq_centered
+******************************************************
+* Log trọng số hộ
+gen ln_wt9 = log(wt9)
+*******************************************************
+* Thống kê mô tả toàn bộ các biến chính trong mô hình:
+*******************************************************
+local vars ///
+    elec_kwh ln_kwh price_ap price_mp ln_price_ap ln_price_mp ln_avg_price_excl_ap ln_avg_price_excl_mp ///
+    ln_income ln_expenditure ln_x_P ln_x_P_sq temp_avg temp_centered temp_sq_centered ///
+    w_elec ln_w_elec urban dry_season region income_class tou_urban tou_urbanXurban
+* Bảng thống kê mô tả tiêu chuẩn: mean, sd, min, max, p1, p25, p50, p75, p99
+foreach v of local vars {
+    display "----------------------------------------"
+    display "`v'"
+    summarize `v', detail
+}
+* 1. Kiểm tra correlation và multi-collinearity của các biến trong mô hình:
+*******************************************************
+* ma trận correlation cơ bản:
+corr ln_avg_price_excl_ap ln_avg_price_excl_mp ln_income ln_w_elec urban dry_season region temp_avg temp_sq_centered tou_urban tou_urbanXurban
+
+* Ma trận correlation với kiểm định ý nghĩa (p-value)"
+pwcorr ln_avg_price_excl_ap ln_avg_price_excl_mp ln_income ln_w_elec urban dry_season region temp_avg temp_sq_centered tou_urban tou_urbanXurban, sig
+
+********** LƯU FILE DỮ LIỆU CUỐI: Data_full.dta **********
+save "Data_full.dta", replace
+
+*******************************************************
+* 4. ƯỚC LƯỢNG MÔ HÌNH OLS + 2SLS + QAIDS
+*******************************************************
+*******************************************************
+* 7. ƯỚC LƯỢNG MÔ HÌNH OLS
+*******************************************************
+
+* ƯỚC LƯỢNG CÁC MÔ HÌNH OLS VÀ SO SÁNH:
+
+reg ln_kwh ln_price_ap ln_income temp_centered temp_sq_centered ///
+    urban i.region i.dry_season [aweight=wt9]
+
+reg ln_kwh ln_price_ap ln_income ln_w_elec temp_centered temp_sq_centered ///
+    i.urban i.income_class i.region i.dry_season  [aweight=wt9]
+	
+reg ln_kwh ln_avg_price_excl_ap ln_income ln_w_elec temp_centered temp_sq_centered ///
+    i.urban i.income_class i.region i.dry_season  [aweight=wt9]
+
+reg ln_kwh ln_avg_price_excl_ap ln_income ln_w_elec ///
+    i.urban i.income_class [aweight=wt9]
+
+reg ln_kwh ln_price_ap ln_income ln_w_elec ///
+    i.urban i.income_class [aweight=wt9]
+	
+* MÔ HÌNH OLS cho R2 và giải thích tốt nhất:
+
+reg ln_kwh ln_price_ap ln_income ln_w_elec temp_centered temp_sq_centered ///
+    i.urban i.income_class i.region i.dry_season  [aweight=wt9]
+
+reg ln_kwh ln_price_ap ln_income ln_w_elec ///
+    i.urban i.income_class [aweight=wt9]
+estimates store ols_model
+	
+*******************************************************
+* 8. ƯỚC LƯỢNG MÔ HÌNH 2SLS
+*******************************************************
+* First-stage (thăm dò): regress ln_price_mp on instrument + controls
+regress ln_price_mp ln_avg_price_excl_mp ln_income ln_w_elec temp_centered temp_sq_centered ///
+    urban i.income_class i.region i.dry_season [aweight=wt9], vce(cluster region)
+
+* 3) Thực hiện 2SLS chính thức với ivregress (tùy chọn: hiển thị first-stage):
+ivregress 2sls ln_kwh ln_income ln_w_elec urban income_class temp_sq_centered ///
+    (ln_price_mp = ln_avg_price_excl_mp) [aweight=wt9], vce(cluster region) first
+
+* First-stage kiểm tra IV mạnh
+estat firststage
+
+* Kiểm định nội sinh
+ivregress 2sls ln_kwh ln_income ln_w_elec urban dry_season i.region temp_avg temp_sq ///
+    (ln_avg_price_excl_ap = ln_avg_price_excl_mp), vce(cluster region)
+estat endogenous
+
+* Overidentification test
+* Tạo ln_price_neighbor = trung bình ln_price_mp của các tỉnh cùng vùng, loại trừ tỉnh hiện tại
+egen ln_price_neighbor = mean(ln_price_mp), by(region)
+replace ln_price_neighbor = (ln_price_neighbor* _N - ln_price_mp)/(_N - 1) if _N>1
+summ ln_price_neighbor
+tab region if missing(ln_price_neighbor)
+
+ivregress 2sls ln_kwh ln_income ln_w_elec temp_centered temp_sq_centered ///
+    urban i.income_class i.region i.dry_season ///
+    (ln_price_mp = ln_avg_price_excl_mp ln_price_neighbor) ///
+    [aweight=wt9], vce(cluster region) first
+
+* Để lấy elasticities (co giãn giá): coefficient của ln_price_mp trong 2SLS là elasticity (∂ln q / ∂ln p).
+*    Lưu hệ số và SE:
+estimates store iv_model
+
+* White robust SE cho 2SLS:
+ivregress 2sls ln_kwh ln_income ln_w_elec temp_centered temp_sq_centered ///
+    urban i.income_class i.region i.dry_season ///
+    (ln_price_mp = ln_avg_price_excl_mp) [aweight=wt9], vce(robust)
+
+* Ramsey RESET (omitted variables)
+predict uhat, resid
+summ uhat
+
+********************************************************
+* Chạy 2SLS với các IV bổ sung: IV 2: Giá gas, IV 3: Nhiệt độ trung bình tỉnh
+********************************************************
+ivregress 2sls ln_kwh ln_income ln_w_elec temp_centered temp_sq_centered ///
+    urban i.income_class i.region i.dry_season ///
+    (ln_price_mp = ln_avg_price_excl_mp ln_gas_prov) ///
+    [aweight=wt9], vce(cluster region) first
+
+ivregress 2sls ln_kwh ln_income ln_w_elec ///
+    urban i.income_class i.region i.dry_season ///
+    (ln_price_mp = ln_avg_price_excl_mp ln_gas_prov) ///
+    [aweight=wt9], vce(cluster region) first
+
+ivregress 2sls ln_kwh ln_income ln_w_elec ///
+    urban i.income_class i.region i.dry_season ///
+    (ln_price_mp = ln_avg_price_excl_mp) ///
+    [aweight=wt9], vce(cluster region) first
+	
+********************************************************
+* Mô hình 2SLS tối ưu:
+********************************************************
+ivregress 2sls ln_kwh ln_income ln_w_elec ///
+    urban i.income_class i.region i.dry_season ///
+    (ln_price_mp = ln_avg_price_excl_mp) ///
+    [aweight=wt9], vce(cluster region) first
+
+* Kiểm tra heteroskedasticity / robust SE đã dùng cluster
+* Nếu muốn kiểm tra robust SE riêng:
+ivregress 2sls ln_kwh ln_income ln_w_elec ///
+    urban i.income_class i.region i.dry_season ///
+    (ln_price_mp = ln_avg_price_excl_mp) ///
+    [aweight=wt9], vce(robust)
+	
+********************************************************
+* So sánh OLS tối ưu và 2SLS tối ưu
+********************************************************
+* Lấy coefficient của ln_price_mp để so sánh OLS vs 2SLS
+eststo ols: reg ln_kwh ln_price_mp ln_income ln_w_elec ///
+    urban i.income_class i.region i.dry_season [aweight=wt9], vce(cluster region)
+
+eststo iv: ivregress 2sls ln_kwh ln_income ln_w_elec ///
+    urban i.income_class i.region i.dry_season ///
+    (ln_price_mp = ln_avg_price_excl_mp) ///
+    [aweight=wt9], vce(cluster region)
+
+esttab ols iv, se label star(* 0.10 ** 0.05 *** 0.01) ///
+    title("OLS vs 2SLS Comparison") replace
+
+********************************************************
+* Optional: kiểm tra đồ thị first-stage
+********************************************************
+predict ln_price_hat if e(sample), xb
+scatter ln_price_mp ln_price_hat
+
+* Weak instrument test
+estat firststage
+
+*******************************************************
+* 9. ƯỚC LƯỢNG MÔ HÌNH QAIDS (SUR)
+*******************************************************
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.income_class) ///
+[aweight=wt9], isure
+
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq ln_income urban dry_season i.region) [aweight=wt9], isure
+
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region) [aweight=wt9], isure
+
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq ln_income urban dry_season i.region i.income_class) ///
+[aweight=wt9], isure
+
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ///
+ln_income urban dry_season i.region i.income_class) [aweight=wt9], isure
+
+gen ln_P_ln_income = ln_P * ln_income
+
+ivregress 2sls w_elec ln_income urban dry_season i.region i.income_class ///
+(ln_price_ap = ln_avg_price_excl_ap) [aweight=wt9], vce(cluster region)
+ 
+gen tou_urban_x_urban = tou_urban * urban
+gen temp_x_lnP = temp_centered * ln_P
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq ln_income tou_urban temp_centered temp_sq_centered ///
+temp_x_lnP tou_urban_x_urban ln_income urban dry_season i.region i.income_class) [aweight=wt9], isure
+
+* Mô hình QAIDS (SUR) tối ưu:
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.income_class) [aweight=wt9], isure
+
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.income_class) [aweight=wt9], isure
+* Kiểm định Breusch-Pagan
+est store qaids_model
+
+* Kiểm định bậc hai λ ≠ 0
+test [w_elec]ln_x_P_sq = 0
+
+* Chi2(1) =  0.16, p = 0.6868 (thành phần bình phương ln_x_P_sq không cần thiết trong mô hình, loại bỏ để tinh gọn mô hình QAIDS)
+sureg (w_elec = ln_P ln_x_P tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.income_class) [aweight=wt9], isure
+
+* Kiểm tra residuals / outliers
+predict resid_w_elec, resid
+summarize resid_w_elec
+histogram resid_w_elec, normal width(0.01)
+list elec_kwh elec_vnd_monthly resid_w_elec if abs(resid_w_elec) > 0.05
+
+* Breusch–Pagan / Cook–Weisberg test (heteroskedasticity)
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.income_class) [aweight=wt9], isure
+predict ehat, residuals
+sktest ehat
+swilk ehat
+
+* Kiểm định dạng hàm (Functional form): Ramsey RESET
+reg w_elec ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.income_class [aweight=wt9]
+ovtest
+
+* Kiểm định Wald cho temp_sq_centered
+test temp_sq_centered = 0
+test temp_centered temp_sq_centered
+
+* Kiểm tra đa thức QAIDS (Quadratic term significance)
+test ln_x_P_sq
+
+* Lưu QAIDS
+est store qaids_model
+
+
+* Mô hình đầy đủ
+sureg (w_elec = ln_P ln_x_P tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.income_class) [aweight=wt9], isure
+
+* Loại bỏ biến vùng miền
+sureg (w_elec = ln_P ln_x_P tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.income_class) [aweight=wt9], isure
+
+* Loại bỏ biến mùa khô
+sureg (w_elec = ln_P ln_x_P tou_urban temp_centered temp_sq_centered ln_income urban i.region i.income_class) [aweight=wt9], isure
+
+* Loại bỏ biến khí hậu
+sureg (w_elec = ln_P ln_x_P tou_urban ln_income urban dry_season i.region i.income_class) [aweight=wt9], isure
+
+* Kiểm tra phân phối
+summarize w_elec
+kdensity w_elec
+
+* Vẽ histogram với đường chuẩn
+histogram w_elec, normal
+
+* Vẽ histogram : Quan hệ nhiệt độ và chi tiêu điện
+preserve
+* Tạo biến nhiệt độ làm tròn theo nửa độ
+gen temp_bin = round(temp_centered, 0.5)
+* Tính trung bình tỷ trọng chi tiêu điện theo temp_bin
+collapse (mean) w_elec, by(temp_bin)
+* Vẽ biểu đồ đường 
+twoway (line w_elec temp_bin, lcolor(blue) lwidth(medthick)) ///
+       (scatter w_elec temp_bin, mcolor(red) msymbol(circle)), ///
+       ytitle("Tỷ trọng chi tiêu điện (w_elec)") ///
+       xtitle("Nhiệt độ trung bình (°C)") ///
+       title("Quan hệ giữa nhiệt độ và chi tiêu điện") ///
+       graphregion(color(white)) bgcolor(white)
+restore
+
+* Vẽ histogram : Biểu đồ stacked bar TOU
+* Giữ dữ liệu gốc
+preserve
+* Tạo biến điện tiêu thụ giờ cao điểm và thấp điểm
+gen q_peak = elec_kwh * 0.35
+gen q_off  = elec_kwh * 0.65
+* Tạo dữ liệu trung bình theo khu vực
+collapse (mean) q_peak q_off, by(urban)
+* Vẽ stacked bar
+graph bar (mean) q_peak q_off, over(urban) ///
+    stack asyvars bar(1, color(red)) bar(2, color(green)) ///
+    legend(label(1 "Giờ cao điểm") label(2 "Giờ thấp điểm")) ///
+    ytitle("Điện tiêu thụ trung bình (kWh)") ///
+    xtitle("Khu vực") ///
+    title("Phân bổ tiêu dùng điện theo TOU") ///
+    note("Đô thị lớn: dịch chuyển từ giờ cao điểm sang thấp điểm")
+* Khôi phục dữ liệu gốc
+restore
+
+* Kiểm tra outlier
+summarize w_elec, detail
+
+*******************************************************
+* 1. CALCULATE ELASTICITIES
+*******************************************************
+* --- Variables ---
+* w_elec      : share of electricity expenditure
+* ln_P        : log price of electricity
+* ln_x_P      : log total expenditure on electricity
+* ln_x_P_sq   : square of ln_x_P
+* ln_income   : log income
+* coefficients from sureg: _b[ln_P], _b[ln_x_P], _b[ln_x_P_sq], _b[ln_income]
+
+* --- Marshallian (Uncompensated) Price Elasticity ---
+gen price_elasticity_marshall = (_b[ln_P] + 2*_b[ln_x_P_sq]*ln_x_P) / w_elec
+
+* --- Income Elasticity ---
+gen income_elasticity = 1 + (_b[ln_income] / w_elec)
+
+* --- Hicksian (Compensated) Price Elasticity ---
+gen price_elasticity_hicks = price_elasticity_marshall + w_elec * income_elasticity
+
+* Kết quả:
+* --- Trung bình toàn mẫu ---
+summarize price_elasticity_marshall price_elasticity_hicks income_elasticity
+
+* --- Trung bình theo vùng ---
+preserve
+collapse (mean) price_elasticity_marshall price_elasticity_hicks income_elasticity, by(region)
+tabstat price_elasticity_marshall price_elasticity_hicks income_elasticity, by(region) statistics(mean sd min max)
+restore
+
+* --- Trung bình theo nhóm thu nhập ---
+preserve
+* Collapse tính trung bình theo nhóm thu nhập
+collapse (mean) price_elasticity_marshall price_elasticity_hicks income_elasticity, by(income_class)
+* Hiển thị bảng kết quả chi tiết
+tabstat price_elasticity_marshall price_elasticity_hicks income_elasticity, ///
+    by(income_class) statistics(mean sd min max) columns(statistics)
+restore
+	
+* --- Xem histogram phân phối elasticities ---
+histogram price_elasticity_marshall, percent normal
+histogram price_elasticity_hicks, percent normal
+histogram income_elasticity, percent normal
+
+summarize price_elasticity_marshall price_elasticity_hicks income_elasticity, detail
+
+*******************************************************
+* 1. XỬ LÝ OUTLIERS TRONG QAIDS ELASTICITIES
+*******************************************************
+
+* Cài đặt gói winsor2 nếu chưa có
+ssc install winsor2, replace
+*******************************************************
+* 2. XỬ LÝ OUTLIERS bằng Winsorize 1% và 99%
+*******************************************************
+* Tạo biến mới giữ dữ liệu gốc
+gen price_elasticity_marshall_w = price_elasticity_marshall
+gen price_elasticity_hicks_w   = price_elasticity_hicks
+gen income_elasticity_w         = income_elasticity
+
+* Winsorize biến price_elasticity_marshall_w ở 1% và 99%
+winsor2 price_elasticity_marshall_w, cuts(1 99)
+winsor2 price_elasticity_hicks_w,   cuts(1 99)
+winsor2 income_elasticity_w,         cuts(1 99)
+
+*******************************************************
+* 3. SUMMARY TOÀN MẪU (sau Winsorize)
+*******************************************************
+summarize price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w, detail
+*******************************************************
+* 4. SUMMARY THEO VÙNG
+*******************************************************
+preserve
+collapse (mean) price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w, by(region)
+tabstat price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w, ///
+    by(region) statistics(mean sd min max) columns(statistics)
+restore
+*******************************************************
+* 5. SUMMARY THEO NHÓM THU NHẬP
+*******************************************************
+preserve
+collapse (mean) price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w, by(income_class)
+tabstat price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w, ///
+    by(income_class) statistics(mean sd min max) columns(statistics)
+restore
+*******************************************************
+*  CREATE ELASTICITIES FOR TEMPERATURE AND SEASON
+*******************************************************
+* --- Temperature Elasticity (marginal effect) ---
+gen temp_elasticity = ( _b[temp_centered] + 2*_b[temp_sq_centered]*temp_centered ) * temp_centered / elec_kwh
+* --- Dry Season Elasticity (binary variable, % change) ---
+gen dryseason_elasticity = (_b[dry_season] / elec_kwh) * 100
+* --- Trung bình theo vùng ---
+preserve
+collapse (mean) temp_elasticity dryseason_elasticity, by(region)
+tabstat temp_elasticity dryseason_elasticity, by(region) statistics(mean sd min max)
+restore
+* --- Trung bình theo nhóm thu nhập ---
+preserve
+collapse (mean) temp_elasticity dryseason_elasticity, by(income_class)
+tabstat temp_elasticity dryseason_elasticity, by(income_class) statistics(mean sd min max)
+restore
+
+* tính độ co giãn: Own-price elasticity – Độ co giãn theo giá của điện; Cross-price elasticity – Tác động gián tiếp qua ln_x_P và ln_x_P_sq ; Expenditure elasticity – Độ co giãn theo tổng chi tiêu/thu nhập:
+
+*******************************************************
+* QAIDS - TÍNH TOÁN ELASTICITY CHUẨN
+*******************************************************
+
+* 1. Chạy mô hình QAIDS (SUR) tối ưu
+sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ///
+       ln_income urban dry_season i.region i.income_class) [aweight=wt9], isure
+
+*******************************************************
+* 2. Lấy hệ số γ_ii, β_i, λ_i từ SUR
+*******************************************************
+scalar gamma = _b[ln_P]       // γ_ii (own-price coefficient)
+scalar beta  = _b[ln_x_P]     // β_i (expenditure coefficient)
+scalar lambda = _b[ln_x_P_sq] // λ_i (quadratic expenditure coefficient)
+
+display "Gamma (price coefficient) = " gamma
+display "Beta (expenditure coefficient) = " beta
+display "Lambda (quadratic coefficient) = " lambda
+
+*******************************************************
+* 3. Lấy giá trị trung bình
+*******************************************************
+summarize w_elec
+scalar mean_w = r(mean)
+
+summarize ln_x_P
+scalar mean_lnx = r(mean)
+
+display "Mean budget share w_elec = " mean_w
+display "Mean ln(x/P) = " mean_lnx
+
+*******************************************************
+* 4. Tính toán elasticity theo QAIDS (công thức chuẩn)
+*******************************************************
+
+* (1) Expenditure elasticity
+scalar eta_exp = 1 + (beta + 2*lambda*mean_lnx)/mean_w
+
+* (2) Marshallian (uncompensated) own-price elasticity
+scalar eta_marshall = (gamma + 2*lambda*mean_lnx)/mean_w - 1
+
+* (3) Hicksian (compensated) own-price elasticity
+scalar eta_hicks = eta_marshall + mean_w*eta_exp
+
+*******************************************************
+* 5. Hiển thị kết quả cuối
+*******************************************************
+display "-------------------------------------------"
+display " EXPENDITURE ELASTICITY (QAIDS) = " eta_exp
+display " MARSHALLIAN OWN-PRICE ELASTICITY = " eta_marshall
+display " HICKSIAN OWN-PRICE ELASTICITY    = " eta_hicks
+display "-------------------------------------------"
+
+*******************************************************
+* 6. VẼ HISTOGRAM PHÂN PHỐI ELASTICITIES
+*******************************************************
+histogram price_elasticity_marshall_w, percent normal title("Marshallian Price Elasticity")
+
+histogram price_elasticity_hicks_w,   percent normal title("Hicksian Price Elasticity")
+
+histogram income_elasticity_w,        percent normal title("Income Elasticity")
+
+*******************************************************
+* TÍNH VÀ TỔNG HỢP HỆ SỐ CO GIÃN THEO VÙNG (QAIDS)
+*******************************************************
+
+* Bước 1: Lưu dữ liệu gốc
+preserve
+
+* Bước 2: Tạo bảng tạm để lưu kết quả
+tempfile elasticity_by_region
+clear
+set obs 1
+gen byte region_code = .
+gen str30 region_name = ""
+gen double eta_exp = .
+gen double eta_marshall = .
+gen double eta_hicks = .
+drop if missing(region_code)
+save `elasticity_by_region', replace
+
+* Bước 3: Quay lại dữ liệu gốc
+restore
+
+* Bước 4: Lặp qua từng vùng
+levelsof region, local(regions)
+foreach r of local regions {
+    preserve
+    keep if region == `r'
+    
+    * Gán nhãn vùng nếu có
+    local region_label : label (region) `r'
+    
+    * Chạy mô hình QAIDS
+    quietly sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ///
+                   ln_income urban dry_season i.income_class) [aweight=wt9], isure
+    
+    * Lấy hệ số
+    scalar gamma = _b[ln_P]
+    scalar beta  = _b[ln_x_P]
+    scalar lambda = _b[ln_x_P_sq]
+    
+    quietly summarize w_elec
+    scalar mean_w = r(mean)
+    quietly summarize ln_x_P
+    scalar mean_lnx = r(mean)
+    
+    scalar eta_exp = 1 + (beta + 2*lambda*mean_lnx)/mean_w
+    scalar eta_marshall = (gamma + 2*lambda*mean_lnx)/mean_w - 1
+    scalar eta_hicks = eta_marshall + mean_w * eta_exp
+
+    * Ghi kết quả vào bảng tạm
+    clear
+    set obs 1
+    gen byte region_code = `r'
+    gen str30 region_name = "`region_label'"
+    gen double eta_exp = eta_exp
+    gen double eta_marshall = eta_marshall
+    gen double eta_hicks = eta_hicks
+
+    append using `elasticity_by_region'
+    save `elasticity_by_region', replace
+    restore
+}
+
+* Bước 5: Hiển thị bảng kết quả
+use `elasticity_by_region', clear
+sort region_code
+list region_code region_name eta_exp eta_marshall eta_hicks, noobs sepby(region_code)
+
+*******************************************************
+* TÍNH VÀ TỔNG HỢP HỆ SỐ CO GIÃN THEO NHÓM THU NHẬP (QAIDS)
+*******************************************************
+
+* Bước 1: Lưu dữ liệu gốc
+preserve
+
+* Bước 2: Tạo bảng tạm để lưu kết quả
+tempfile elasticity_by_income
+clear
+set obs 1
+gen byte income_code = .
+gen str30 income_label = ""
+gen double eta_exp = .
+gen double eta_marshall = .
+gen double eta_hicks = .
+drop if missing(income_code)
+save `elasticity_by_income', replace
+
+* Bước 3: Quay lại dữ liệu gốc
+restore
+
+* Bước 4: Lặp qua từng nhóm thu nhập
+levelsof income_class, local(classes)
+foreach c of local classes {
+    preserve
+    keep if income_class == `c'
+    
+    * Lấy nhãn thu nhập nếu có
+    local label : label (income_class) `c'
+    
+    * Chạy mô hình QAIDS
+    quietly sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ///
+                   ln_income urban dry_season i.region) [aweight=wt9], isure
+    
+    * Lấy hệ số
+    scalar gamma = _b[ln_P]
+    scalar beta  = _b[ln_x_P]
+    scalar lambda = _b[ln_x_P_sq]
+    
+    quietly summarize w_elec
+    scalar mean_w = r(mean)
+    quietly summarize ln_x_P
+    scalar mean_lnx = r(mean)
+    
+    scalar eta_exp = 1 + (beta + 2*lambda*mean_lnx)/mean_w
+    scalar eta_marshall = (gamma + 2*lambda*mean_lnx)/mean_w - 1
+    scalar eta_hicks = eta_marshall + mean_w * eta_exp
+
+    * Ghi kết quả vào bảng tạm
+    clear
+    set obs 1
+    gen byte income_code = `c'
+    gen str30 income_label = "`label'"
+    gen double eta_exp = eta_exp
+    gen double eta_marshall = eta_marshall
+    gen double eta_hicks = eta_hicks
+
+    append using `elasticity_by_income'
+    save `elasticity_by_income', replace
+    restore
+}
+
+* Bước 5: Hiển thị bảng kết quả
+use `elasticity_by_income', clear
+sort income_code
+list income_code income_label eta_exp eta_marshall eta_hicks, noobs
+
+graph bar eta_hicks, over(income_label, label(angle(45) labsize(small))) ///
+    bar(1, color(navy)) ///
+    title("Hicksian Own-Price Elasticity by Income Group") ///
+    ytitle("Elasticity") ///
+    blabel(bar, format(%6.2f)) ///
+    legend(off)
+
+graph bar eta_exp, over(income_label, label(angle(45) labsize(small))) ///
+    bar(1, color(forest_green)) ///
+    title("Expenditure Elasticity by Income Group") ///
+    ytitle("Elasticity") ///
+    blabel(bar, format(%6.2f)) ///
+    legend(off)
+*******************************************************
+* 4. ELASTICITIES BY INCOME QUINTILE
+*******************************************************
+twoway ///
+    (line price_elasticity income_group, lcolor(blue) lwidth(medthick) ///
+         msymbol(circle) mcolor(blue)) ///
+    (line hicksian_elasticity income_group, lcolor(red) lwidth(medthick) ///
+         msymbol(square) mcolor(red)), ///
+    legend(order(1 "Marshallian" 2 "Hicksian") ///
+           ring(0) position(11)) ///
+    xtitle("Income Quintile") ///
+    ytitle("Price Elasticity") ///
+    xlabel(1 "Q1" 2 "Q2" 3 "Q3" 4 "Q4" 5 "Q5") ///
+    title("Price Elasticities by Income Quintile", size(medium))
+
+graph export "elasticities_by_quintile.png", replace width(800) height(600)
+
+* ĐỒ THỊ 3: Độ co giãn thu nhập theo nhóm thu nhập
+twoway ///
+    (line price_elasticity income_quintile, lwidth(medthick) lcolor(blue) ///
+         msymbol(circle) mcolor(blue) ///
+         ytitle("Elasticity") ///
+         xtitle("Income Quintile") ///
+         ylabel(-1(0.2)1) ///
+         xlabel(1 "Q1" 2 "Q2" 3 "Q3" 4 "Q4" 5 "Q5") ///
+    ) ///
+    (line income_elasticity income_quintile, lwidth(medthick) lcolor(red) ///
+         msymbol(square) mcolor(red)) ///
+    , ///
+    legend(order(1 "Price Elasticity" 2 "Income Elasticity") ///
+           ring(0) position(11)) ///
+    title("Price and Income Elasticities by Income Quintile", ///
+          size(medium))
+
+histogram w_elec, normal
+kdensity w_elec
+*******************************************************
+* COMPENSATING VARIATION (CV)
+*******************************************************
+summarize w_elec TONGCHITIEU_monthly_VND
+
+* Giá điện trước và sau theo Quyết định 599
+scalar P0 = 2114.86
+scalar P1 = 2204.07
+scalar delta_p = (P1 - P0) / P0
+
+* Tính CV theo công thức QAIDS
+scalar CV = mean_w * TONGCHITIEU_monthly_VND * delta_p * eta_hicks
+
+*******************************************************
+* 6. Hiển thị kết quả cuối
+*******************************************************
+display "-------------------------------------------"
+display " EXPENDITURE ELASTICITY (QAIDS) = " eta_exp
+display " MARSHALLIAN OWN-PRICE ELASTICITY = " eta_marshall
+display " HICKSIAN OWN-PRICE ELASTICITY    = " eta_hicks
+display " COMPENSATING VARIATION (CV)      = " CV
+display "-------------------------------------------"
+
+*******************************************************
+* 1. Giả định tăng giá điện TOU (ví dụ: 10%)
+*******************************************************
+* delta_p_peak là mức tăng giá theo tỷ lệ (10% = 0.10)
+gen delta_p_peak = 0.10
+*******************************************************
+* 2. Tính Compensating Variation (CV) cho từng hộ
+*******************************************************
+* CV biểu thị số tiền cần bù để hộ dân đạt lại mức tiện ích ban đầu khi giá điện tăng
+* Công thức (gần đúng từ Taylor expansion 1st-order + own-price elasticity):
+* CV ≈ Q_elec * ΔP * (1 + 0.5 * HES)
+gen cv = elec_kwh * delta_p_peak * (1 + eta_hicks/2)
+
+* Áp trọng số khảo sát
+gen cv_w = cv * wt9
+
+*******************************************************
+* 3. Tổng hợp CV và độ co giãn theo nhóm thu nhập và khu vực
+*******************************************************
+preserve 
+collapse (mean) eta_hicks income_elasticity price_elasticity cv cv_w, ///
+    by(income_group urban)
+* Hiển thị kết quả trung bình
+list income_group urban eta_hicks income_elasticity price_elasticity cv cv_w, sepby(income_group)
+restore    
+*******************************************************
+* 4. Minh họa CV theo thu nhập và khu vực bằng biểu đồ cột
+*******************************************************
+graph bar cv, over(urban, label(labsize(medium))) ///
+    over(income_group, label(labsize(medium) valuelabel)) ///
+    ascategory ///
+    legend(order(1 "Rural" 2 "Urban")) ///
+    ytitle("Compensating Variation (VND/month)") ///
+    title("Compensating Variation by Income Quintile and Urban/Rural")
+
+
+*******************************************************
+* 5. COMPENSATING VARIATION BY INCOME & AREA
+*******************************************************
+graph bar cv, over(urban, label(labsize(medium))) ///
+    over(income_group, label(labsize(medium) valuelabel)) ///
+    ascategory ///
+    legend(order(1 "Rural" 2 "Urban")) ///
+    ytitle("Compensating Variation (VND/month)") ///
+    title("Compensating Variation by Income Quintile and Urban/Rural")
+
+*******************************************************
+* 11. VẼ SCATTER FIRST-STAGE ln_price_mp vs ln_avg_price_excl_mp
+*******************************************************
+* Mục đích: Kiểm tra tính liên quan (relevance) của biến công cụ ln_avg_price_excl_mp
+* với biến nội sinh ln_price_mp trong mô hình 2SLS
+
+twoway ///
+    (scatter ln_price_mp ln_avg_price_excl_mp, mcolor(blue%70) msize(small) ///
+        legend(label(1 "Observed Data"))) ///
+    (lfit ln_price_mp ln_avg_price_excl_mp, lcolor(red) lwidth(medthick) ///
+        legend(label(2 "Fitted Line"))), ///
+    title("First-stage Relationship: ln_price_mp vs ln_avg_price_excl_mp", size(medium)) ///
+    xtitle("Instrument: Regional Average Electricity Price (ln_avg_price_excl_mp)") ///
+    ytitle("Household Electricity Price (ln_price_mp)") ///
+    legend(order(1 2) region(lcolor(white))) ///
+    note("Positive correlation confirms instrument relevance for 2SLS estimation.") ///
+    xlabel(, grid) ylabel(, grid)
+
+*******************************************************
+* 12. LƯU KẾT QUẢ RA BẢNG SO SÁNH
+*******************************************************
+esttab ols_model iv_model qaids_model using "Results_OLS_IV_QAIDS.rtf", ///
+    replace se r2 ar2 label
+	
+* Hiển thị bảng so sánh kết quả ngay trong Stata
+esttab ols_model iv_model qaids_model, ///
+    se r2 ar2 label ///
+    title("Comparison of OLS, IV, and QAIDS Models")
+
+*******************************************************	
+* 9. ĐỒ THỊ MINH HỌA 
+*******************************************************
+
+* ĐỒ THỊ 1: Histogram – Monthly Electricity Consumption (kWh/tháng)
+histogram elec_kwh, frequency normal ///
+    title("Distribution of Monthly Electricity Consumption (kWh)") ///
+    xtitle("kWh per Month") ytitle("Number of Households") ///
+    color(blue%50) lcolor(black)
+graph export "fig1_distribution.png", replace width(800) height(600)
+
+* ĐỒ THỊ 2: Mối quan hệ giá - lượng (scatter + fitted)
+* Scatter + Fitted line (Log-Log) theo giá trung bình:
+twoway (scatter ln_kwh ln_price_ap, mcolor(blue%30)) ///
+       (lfit ln_kwh ln_price_ap, lcolor(red) lwidth(thick)), ///
+       title("Price-Quantity Relationship (Average Price, Log-Log)") ///
+       xtitle("Log(Average Price per kWh)") ytitle("Log(Electricity Consumption)") ///
+       legend(label(1 "Observed") label(2 "Fitted Line"))
+graph export "fig_price_quantity_ap.png", replace width(800) height(600)
+
+* Scatter + Fitted line (Log-Log) theo giá trung bình
+twoway (scatter ln_kwh ln_price_mp, mcolor(blue%30)) ///
+       (lfit ln_kwh ln_price_mp, lcolor(red) lwidth(thick)), ///
+       title("Price-Quantity Relationship (Marginal Price, Log-Log)") ///
+       xtitle("Log(Marginal Price per kWh)") ytitle("Log(Electricity Consumption)") ///
+       legend(label(1 "Observed") label(2 "Fitted Line"))
+graph export "fig_price_quantity_mp.png", replace width(800) height(600)
+		  
+* đồ thị 4: Biến đổi Bù trừ (CV) theo nhóm thu nhập và khu vực thành thị/nông thôn.
+
+graph bar cv, over(urban, ///
+        label(labsize(medium))) ///
+    over(income_quintile, ///
+        label(labsize(medium) valuelabel)) ///
+    ascategory ///
+    legend(order(1 "Rural" 2 "Urban")) ///
+    ytitle("Compensating Variation (VND/month)") ///
+    xtitle("Income Quintile") ///
+    title("Compensating Variation by Income Quintile and Urban/Rural")
+
+* ĐỒ THỊ 4: Tác động TOU theo khu vực
+gen tou_impact = 0.31 * (0.4 - tou_ratio)
+twoway (histogram tou_impact if urban == 1, frequency color(blue%50) lcolor(black)) ///
+       (histogram tou_impact if urban == 0, frequency color(red%50) lcolor(black)), ///
+       title("TOU Impact on Expenditure Share by Area") ///
+       xtitle("Change in Electricity Share (%)") ytitle("Density") ///
+       legend(label(1 "Urban") label(2 "Rural"))
+graph export "fig4_tou_impact.png", replace width(800) height(600)
+
+*******************************************************
+* 12. XUẤT BẢNG TỔNG HỢP
+*******************************************************
+esttab m2sls_full qaids_full using "final_results.rtf", ///
+    se star(* 0.10 ** 0.05 *** 0.01) ///
+    title("Table 1: Estimation Results") ///
+    mtitles("2SLS" "QAIDS") replace
+
+esttab m2sls_full qaids_full using "Model_Summary_All.rtf", ///
+    se star(* 0.10 ** 0.05 *** 0.01) replace ///
+    label title("Summary Diagnostics: 2SLS & QAIDS")
+	
+*******************************************************
+* 5. WELFARE & SIMULATION
+* Compensating Variation (Bockstael & McConnell, 2007)
+* CV = Q * ΔP * (1 + ε / 2)
+* ε dùng: Price elasticity under TOU × Urban
+*******************************************************
+*******************************************************
+* 1. CREATE INCOME DECILES
+*******************************************************
+xtile income_decile = TONGTHU_monthly_VND, n(10)
+label variable income_decile "Income Decile (1=Poorest, 10=Richest)"
+
+*******************************************************
+* 2. DEFINE BEHAVIORAL PARAMETERS
+*******************************************************
+* 10% TOU peak price increase
+gen delta_p_peak = 0.10
+label variable delta_p_peak "Peak-hour Price Increase (10%)"
+
+* Price elasticity (elasticity under TOU × Urban)
+* 0.31 là hệ số ước lượng của biến tương tác TOU × Urban
+gen price_elasticity = 0.31 * tou_urban
+label variable price_elasticity "Price Elasticity (TOU × Urban)"
+
+*******************************************************
+* 3. CURRENT WELFARE LOSS (Compensating Variation)
+* CV = Q * ΔP * (1 + ε / 2)
+*******************************************************
+gen cv_loss = elec_kwh * delta_p_peak * (1 + price_elasticity/2)
+label variable cv_loss "Welfare Loss (CV, monthly)"
+
+*******************************************************
+* 4. WEIGHTED CV (VHLSS Sampling Weights)
+*******************************************************
+gen cv_loss_w = cv_loss * wt9
+label variable cv_loss_w "Weighted CV (VND, monthly)"
+
+*******************************************************
+* 5. Summary Statistics by Income Decile and Urban/Rural
+*******************************************************
+bysort income_decile urban: egen cv_mean = mean(cv_loss)
+label variable cv_mean "Mean CV by Decile × Urban"
+
+bysort income_decile urban: egen cvw_mean = mean(cv_loss_w)
+label variable cvw_mean "Weighted Mean CV by Decile × Urban"
+
+* Mean, SD, Min, Max of CV (monthly, weighted and unweighted)
+* Theo income decile
+tabstat cv_loss cv_loss_w, by(income_decile) statistics(mean sd min max) columns(statistics)
+
+* Theo urban/rural
+tabstat cv_loss cv_loss_w, by(urban) statistics(mean sd min max) columns(statistics)
+
+* Chú thích:
+* cv_loss      : CV without weights
+* cv_loss_w    : CV weighted by VHLSS sample weight (wt9)
+* income_decile: 1=Poorest, 10=Richest
+* urban        : 0=Rural, 1=Urban
+
+*******************************************************
+* 4. MÔ PHỎNG NĂM 2030 (Future Scenario)
+*******************************************************
+*******************************************************
+* FUTURE SCENARIO 2030: CV SIMULATION
+*******************************************************
+* Assumptions:
+* - Income grows 6% per year
+* - Electricity price increases 5% per year
+* - 8 years from current period
+
+* Project income and electricity price for 2030
+gen income_2030 = TONGTHU_monthly_VND * (1.06^8)
+gen price_2030  = p_elec * (1.05^8)
+
+* Compute CV for 2030 (unweighted and weighted)
+* Using formula: CV ≈ Q * P * (1 + ε/2)
+gen cv_2030   = elec_kwh * price_2030 * (1 + 0.31/2)
+gen cv_2030_w = cv_2030 * wt9
+
+* Optional: create decile × urban variable for grouping
+gen decile_urban = income_decile*10 + urban
+label define decile_urban_lbl ///
+    11 "Decile1-Rural" 12 "Decile1-Urban" ///
+    21 "Decile2-Rural" 22 "Decile2-Urban" ///
+    31 "Decile3-Rural" 32 "Decile3-Urban" ///
+    41 "Decile4-Rural" 42 "Decile4-Urban" ///
+    51 "Decile5-Rural" 52 "Decile5-Urban" ///
+    61 "Decile6-Rural" 62 "Decile6-Urban" ///
+    71 "Decile7-Rural" 72 "Decile7-Urban" ///
+    81 "Decile8-Rural" 82 "Decile8-Urban" ///
+    91 "Decile9-Rural" 92 "Decile9-Urban" ///
+    101 "Decile10-Rural" 102 "Decile10-Urban"
+label values decile_urban decile_urban_lbl
+
+* Tabstat summary by decile × urban
+tabstat cv_2030 cv_2030_w, by(decile_urban) statistics(mean sd min max) columns(statistics)
+
+*******************************************************
+* 5. CO₂ SAVINGS CALCULATION
+*******************************************************
+*******************************************************
+* Create peak reduction variable
+*******************************************************
+gen peak_reduction = 0.31 * tou_urban   // 0.31 = assumed elasticity for peak reduction
+label variable peak_reduction "Peak consumption reduction factor (TOU × Urban)"
+* Assumption: emission factor = 0.45 kg CO₂ per kWh
+
+gen co2_saving_kg   = peak_reduction * elec_kwh * 12 * 0.45   // annual saving in kg
+gen co2_saving_ton  = co2_saving_kg / 1000                     // convert to tons
+gen co2_saving_w    = co2_saving_ton * wt9                     // weighted by survey weight
+
+*******************************************************
+* 6. COLLAPSE RESULTS BY DECILE & URBAN/RURAL
+*******************************************************
+collapse ///
+    (mean) cv_current  = cv_loss_w  /// weighted current CV
+    (mean) cv_future   = cv_2030_w  /// weighted future CV
+    (mean) co2_saving  = co2_saving_w, ///
+    by(income_decile tou_urban)
+
+* Label variables for clarity
+label variable cv_current "Current Compensating Variation (VND/month)"
+label variable cv_future  "Future Compensating Variation (2030, VND/month)"
+label variable co2_saving "Annual CO₂ Savings (tons, weighted)"
+
+* Optional: display table
+list, sepby(income_decile) noobs
+
+*******************************************************
+* 7. KIỂM TRA KẾT QUẢ
+*******************************************************
+list income_decile tou_urban cv_current cv_future co2_saving, sepby(income_decile)
+*******************************************************
+*******************************************************
+* 8. XUẤT RA EXCEL
+*******************************************************
+export excel income_decile tou_urban cv_current cv_future co2_saving ///
+    using "welfare_cv_co2_summary.xlsx", ///
+    firstrow(variables) replace sheet("Summary")
+
+*******************************************************
+* 13. KẾT THÚC
+*******************************************************
+log close
+
+Kết quả sau code:
+
+. *******************************************************
+. * Thống kê mô tả toàn bộ các biến chính trong mô hình:
+. *******************************************************
+. local vars ///
+>     elec\_kwh ln\_kwh price\_ap price\_mp ln\_price\_ap ln\_price\_mp ln\_avg\_price\_excl\_ap ln\_avg\_price\_excl\_mp ///
+>     ln\_income ln\_expenditure ln\_x\_P ln\_x\_P\_sq temp\_avg temp\_centered temp\_sq\_centered ///
+>     w\_elec ln\_w\_elec urban dry\_season region income\_class tou\_urban tou\_urbanXurban
+
+. * Bảng thống kê mô tả tiêu chuẩn: mean, sd, min, max, p1, p25, p50, p75, p99
+. foreach v of local vars {
+  2.     display "----------------------------------------"
+  3.     display "`v'"
+  4.     summarize `v', detail
+  5. }
+---
+elec_kwh
+
+                          elec_kwh
+---
+      Percentiles      Smallest
+ 1%     5.063657       .6751543
+ 5%     18.32562       .7233796
+10%     40.50926       .9645061       Obs               9,362
+25%     96.80851       .9645061       Sum of wgt.       9,362
+
+50%     159.9325                      Mean           183.5129
+                        Largest       Std. dev.      122.7505
+75%      244.755       586.9984
+90%     353.3402       586.9984       Variance       15067.68
+95%     421.1609       586.9984       Skewness        1.02331
+99%     586.9984       586.9984       Kurtosis       4.124636
+---
+ln_kwh
+
+                           ln_kwh
+---
+      Percentiles      Smallest
+ 1%     1.622089      -.3928141
+ 5%       2.9083      -.3238212
+10%      3.70153      -.0361391       Obs               9,362
+25%     4.572735      -.0361391       Sum of wgt.       9,362
+
+50%     5.074752                      Mean           4.905832
+                        Largest       Std. dev.       .940726
+75%     5.500257       6.375022
+90%     5.867431       6.375022       Variance       .8849653
+95%     6.043015       6.375022       Skewness      -1.525292
+99%     6.375022       6.375022       Kurtosis       6.221062
+---
+price_ap
+
+                          price_ap
+---
+      Percentiles      Smallest
+ 1%         1728           1728
+ 5%         1728           1728
+10%         1728           1728       Obs               9,362
+25%     1756.044           1728       Sum of wgt.       9,362
+
+50%     1875.791                      Mean           1942.008
+                        Largest       Std. dev.      248.9773
+75%     2042.859       5110.747
+90%     2264.107       5678.607       Variance       61989.71
+95%      2374.39       6303.254       Skewness       4.243355
+99%     2555.374       6388.434       Kurtosis       48.41996
+---
+price_mp
+
+                          price_mp
+---
+      Percentiles      Smallest
+ 1%         1728           1728
+ 5%         1728           1728
+10%         1728           1728       Obs               9,362
+25%         1786           1728       Sum of wgt.       9,362
+
+50%         2074                      Mean           2254.652
+                        Largest       Std. dev.      426.0011
+75%         2612           3015
+90%         2919           3015       Variance       181476.9
+95%         3015           3015       Skewness       .4115613
+99%         3015           3015       Kurtosis       1.794725
+---
+ln_price_ap
+
+                         ln_price_ap
+---
+      Percentiles      Smallest
+ 1%      7.45472        7.45472
+ 5%      7.45472        7.45472
+10%      7.45472        7.45472       Obs               9,362
+25%     7.470819        7.45472       Sum of wgt.       9,362
+
+50%     7.536786                      Mean           7.564803
+                        Largest       Std. dev.      .1108608
+75%     7.622106       8.539101
+90%     7.724936       8.644462       Variance       .0122901
+95%     7.772496       8.748821       Skewness       2.020647
+99%     7.845953       8.762244       Kurtosis       12.54309
+---
+ln_price_mp
+
+                         ln_price_mp
+---
+      Percentiles      Smallest
+ 1%      7.45472        7.45472
+ 5%      7.45472        7.45472
+10%      7.45472        7.45472       Obs               9,362
+25%     7.487734        7.45472       Sum of wgt.       9,362
+
+50%     7.637234                      Mean           7.703303
+                        Largest       Std. dev.      .1858259
+75%     7.867871       8.011355
+90%     7.978996       8.011355       Variance       .0345313
+95%     8.011355       8.011355       Skewness       .2345665
+99%     8.011355       8.011355       Kurtosis       1.703389
+---
+ln_avg_price_excl_ap
+
+                    ln_avg_price_excl_ap
+---
+      Percentiles      Smallest
+ 1%     7.493863       7.490904
+ 5%     7.505555       7.491088
+10%     7.517508        7.49152       Obs               9,362
+25%     7.535558       7.491555       Sum of wgt.       9,362
+
+50%     7.554705                      Mean           7.570216
+                        Largest       Std. dev.      .0499021
+75%     7.601907       7.690472
+90%     7.650958       7.690472       Variance       .0024902
+95%     7.666955       7.690472       Skewness       .8009943
+99%      7.69022       7.690472       Kurtosis       2.781706
+---
+ln_avg_price_excl_mp
+
+                    ln_avg_price_excl_mp
+---
+      Percentiles      Smallest
+ 1%     7.570841       7.564747
+ 5%     7.599555       7.564747
+10%     7.627766       7.565664       Obs               9,362
+25%     7.662803       7.565664       Sum of wgt.       9,362
+
+50%     7.698431                      Mean           7.717535
+                        Largest       Std. dev.       .080245
+75%     7.780325       7.897809
+90%     7.837945       7.897809       Variance       .0064393
+95%      7.86436       7.897809       Skewness       .4942988
+99%     7.897021       7.897809       Kurtosis       2.535266
+---
+ln_income
+
+                          ln_income
+---
+      Percentiles      Smallest
+ 1%     14.21563       11.48247
+ 5%     15.00961       11.58989
+10%     15.35945        11.8706       Obs               9,362
+25%     15.94028       12.52453       Sum of wgt.       9,362
+
+50%     16.52733                      Mean           16.48643
+                        Largest       Std. dev.      .8901552
+75%     17.02892       20.28219
+90%     17.53123       20.28267       Variance       .7923763
+95%     17.88548       20.68131       Skewness      -.0535448
+99%     18.67295        21.7627       Kurtosis       4.322555
+---
+ln_expenditure
+
+                       ln_expenditure
+---
+      Percentiles      Smallest
+ 1%     14.04029       12.58465
+ 5%     14.65416       12.79571
+10%     14.94421       13.01885       Obs               9,362
+25%     15.36803       13.05382       Sum of wgt.       9,362
+
+50%     15.81043                      Mean           15.78764
+                        Largest       Std. dev.      .6823258
+75%     16.22174       19.35788
+90%     16.57798       19.79959       Variance       .4655685
+95%     16.80592       20.68981       Skewness       .0779419
+99%     17.53708       21.93431       Kurtosis        5.08577
+---
+ln_x_P
+
+                           ln_x_P
+---
+      Percentiles      Smallest
+ 1%     6.577714       5.129932
+ 5%     7.186085        5.34099
+10%     7.455666       5.564133       Obs               9,362
+25%     7.853641       5.599097       Sum of wgt.       9,362
+
+50%     8.247929                      Mean            8.22284
+                        Largest       Std. dev.      .6261345
+75%     8.613684        11.8018
+90%     8.927361       12.15152       Variance       .3920444
+95%     9.129111       12.99349       Skewness       .0920916
+99%     9.767494       14.31221       Kurtosis       5.853284
+---
+ln_x_P_sq
+
+                          ln_x_P_sq
+---
+      Percentiles      Smallest
+ 1%     43.26633        26.3162
+ 5%     51.63981       28.52617
+10%     55.58696       30.95958       Obs               9,362
+25%     61.67967       31.34988       Sum of wgt.       9,362
+
+50%     68.02832                      Mean           68.00711
+                        Largest       Std. dev.      10.36928
+75%     74.19555       139.2825
+90%     79.69778       147.6594       Variance       107.5219
+95%     83.34068       168.8308       Skewness       .7010446
+99%     95.40395       204.8392       Kurtosis       9.325593
+---
+temp_avg
+
+                    temperature_avg_month
+---
+      Percentiles      Smallest
+ 1%        14.66           12.4
+ 5%        16.86           12.4
+10%        18.85           12.4       Obs               9,362
+25%        23.93           12.4       Sum of wgt.       9,362
+
+50%        26.43                      Mean           25.38318
+                        Largest       Std. dev.      3.758722
+75%        28.13          30.99
+90%        28.91          30.99       Variance       14.12799
+95%        29.49          30.99       Skewness      -1.245318
+99%        30.52          30.99       Kurtosis       3.973244
+---
+temp_centered
+
+                        temp_centered
+---
+      Percentiles      Smallest
+ 1%    -10.72318      -12.98318
+ 5%    -8.523184      -12.98318
+10%    -6.533184      -12.98318       Obs               9,362
+25%    -1.453184      -12.98318       Sum of wgt.       9,362
+
+50%     1.046816                      Mean           1.12e-09
+                        Largest       Std. dev.      3.758722
+75%     2.746816       5.606816
+90%     3.526816       5.606816       Variance       14.12799
+95%     4.106816       5.606816       Skewness      -1.245318
+99%     5.136816       5.606816       Kurtosis       3.973244
+---
+temp_sq_centered
+
+                      temp_sq_centered
+---
+      Percentiles      Smallest
+ 1%     .0114096       .0002828
+ 5%     .1134449       .0002828
+10%     .3638311       .0002828       Obs               9,362
+25%     1.432368       .0002828       Sum of wgt.       9,362
+
+50%     5.840998                      Mean           14.12648
+                        Largest       Std. dev.      24.35973
+75%     12.43843       168.5631
+90%      42.6825       168.5631       Variance       593.3964
+95%     72.64466       168.5631       Skewness       2.994766
+99%     114.9867       168.5631       Kurtosis        12.5496
+---
+w_elec
+
+                           w_elec
+---
+      Percentiles      Smallest
+ 1%     .0019357       .0001228
+ 5%     .0061285       .0001489
+10%     .0134891        .000256       Obs               9,362
+25%     .0264456       .0002622       Sum of wgt.       9,362
+
+50%     .0414655                      Mean           .0472317
+                        Largest       Std. dev.      .0317452
+75%     .0614029       .2675784
+90%     .0859652       .2879576       Variance       .0010078
+95%     .1039116       .2997452       Skewness       1.743624
+99%     .1585948       .3980892       Kurtosis       9.502269
+---
+ln_w_elec
+
+                          ln_w_elec
+---
+      Percentiles      Smallest
+ 1%    -6.247285      -9.005075
+ 5%    -5.094805      -8.811948
+10%    -4.305873      -8.270479       Obs               9,362
+25%    -3.632666      -8.246331       Sum of wgt.       9,362
+
+50%    -3.182895                      Mean          -3.317009
+                        Largest       Std. dev.      .8467231
+75%    -2.790298      -1.318343
+90%    -2.453813      -1.244942       Variance         .71694
+95%    -2.264215      -1.204823       Skewness       -1.47927
+99%    -1.841403      -.9210793       Kurtosis       6.722718
+---
+urban
+
+                            urban
+---
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs               9,362
+25%            0              0       Sum of wgt.       9,362
+
+50%            0                      Mean           .3381756
+                        Largest       Std. dev.      .4731139
+75%            1              1
+90%            1              1       Variance       .2238368
+95%            1              1       Skewness       .6841187
+99%            1              1       Kurtosis       1.468018
+---
+dry_season
+
+                         dry_season
+---
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs               9,362
+25%            0              0       Sum of wgt.       9,362
+
+50%            0                      Mean           .4990387
+                        Largest       Std. dev.      .5000258
+75%            1              1
+90%            1              1       Variance       .2500258
+95%            1              1       Skewness       .0038453
+99%            1              1       Kurtosis       1.000015
+---
+region
+
+                           region
+---
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs               9,362
+25%            2              0       Sum of wgt.       9,362
+
+50%            4                      Mean           3.084063
+                        Largest       Std. dev.      1.726672
+75%            5              5
+90%            5              5       Variance       2.981395
+95%            5              5       Skewness      -.3746435
+99%            5              5       Kurtosis       1.811063
+---
+income_class
+
+                        income_class
+---
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs               9,362
+25%            1              0       Sum of wgt.       9,362
+
+50%            2                      Mean           1.999359
+                        Largest       Std. dev.      1.414062
+75%            3              4
+90%            4              4       Variance       1.999572
+95%            4              4       Skewness        .000453
+99%            4              4       Kurtosis       1.700353
+---
+tou_urban
+
+                          tou_urban
+---
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs               9,362
+25%            0              0       Sum of wgt.       9,362
+
+50%            0                      Mean           .0328135
+                        Largest       Std. dev.      .1097723
+75%            0             .4
+90%            0             .4       Variance         .01205
+95%           .4             .4       Skewness       3.046222
+99%           .4             .4       Kurtosis       10.27947
+---
+tou_urbanXurban
+
+                       tou_urbanXurban
+---
+      Percentiles      Smallest
+ 1%            0              0
+ 5%            0              0
+10%            0              0       Obs               9,362
+25%            0              0       Sum of wgt.       9,362
+
+50%            0                      Mean           .0210639
+                        Largest       Std. dev.       .089346
+75%            0             .4
+90%            0             .4       Variance       .0079827
+95%           .4             .4       Skewness       4.005677
+99%           .4             .4       Kurtosis       17.04544
+. * 1. Kiểm tra correlation và multi-collinearity của các biến trong mô hình:
+. *******************************************************
+. * ma trận correlation cơ bản:
+. corr ln_avg_price_excl_ap ln_avg_price_excl_mp ln_income ln_w_elec urban dry_season region temp_avg temp_sq_centered t
+> ou\_urban tou\_urbanXurban
+(obs=9,362)
+
+             | ln_av~ap ln_av~mp ln_inc~e ln_w_e~c    urban dry_se~n   region temp_avg temp_s~d t~_urban t~Xurban
+-------------+---------------------------------------------------------------------------------------------------
+ln_avg_pr~ap |   1.0000
+ln_avg_pr~mp |   0.9809   1.0000
+   ln_income |   0.2097   0.2112   1.0000
+   ln_w_elec |   0.2450   0.2610   0.0640   1.0000
+       urban |   0.2174   0.1932   0.1870   0.1255   1.0000
+  dry_season |  -0.0001   0.0006  -0.0367  -0.0128  -0.0095   1.0000
+      region |  -0.1886  -0.1605   0.0313  -0.0022   0.0655  -0.0002   1.0000
+    temp_avg |   0.0382   0.0437   0.0491   0.0423   0.0327  -0.4903   0.3515   1.0000
+temp_sq_ce~d |   0.1124   0.1052  -0.0243   0.0172  -0.0223   0.2881  -0.3574  -0.7222   1.0000
+   tou_urban |   0.6104   0.5427   0.1384   0.1084   0.1919  -0.0002  -0.2175   0.0541   0.0219   1.0000
+tou_urbanX~n |   0.4610   0.4042   0.1338   0.0771   0.3298  -0.0010  -0.1120   0.0614   0.0004   0.7887   1.0000
+. * Ma trận correlation với kiểm định ý nghĩa (p-value)"
+. pwcorr ln_avg_price_excl_ap ln_avg_price_excl_mp ln_income ln_w_elec urban dry_season region temp_avg temp_sq_centered
+>  tou\_urban tou\_urbanXurban, sig
+
+             | ln_av~ap ln_av~mp ln_inc~e ln_w_e~c    urban dry_se~n   region
+-------------+---------------------------------------------------------------
+ln_avg_pr~ap |   1.0000
+             |
+             |
+ln_avg_pr~mp |   0.9809   1.0000
+             |   0.0000
+             |
+   ln_income |   0.2097   0.2112   1.0000
+             |   0.0000   0.0000
+             |
+   ln_w_elec |   0.2450   0.2610   0.0640   1.0000
+             |   0.0000   0.0000   0.0000
+             |
+       urban |   0.2174   0.1932   0.1870   0.1255   1.0000
+             |   0.0000   0.0000   0.0000   0.0000
+             |
+  dry_season |  -0.0001   0.0006  -0.0367  -0.0128  -0.0095   1.0000
+             |   0.9889   0.9540   0.0004   0.2160   0.3599
+             |
+      region |  -0.1886  -0.1605   0.0313  -0.0022   0.0655  -0.0002   1.0000
+             |   0.0000   0.0000   0.0024   0.8348   0.0000   0.9833
+             |
+    temp_avg |   0.0382   0.0437   0.0491   0.0423   0.0327  -0.4903   0.3515
+             |   0.0002   0.0000   0.0000   0.0000   0.0016   0.0000   0.0000
+             |
+temp_sq_ce~d |   0.1124   0.1052  -0.0243   0.0172  -0.0223   0.2881  -0.3574
+             |   0.0000   0.0000   0.0186   0.0961   0.0306   0.0000   0.0000
+             |
+   tou_urban |   0.6104   0.5427   0.1384   0.1084   0.1919  -0.0002  -0.2175
+             |   0.0000   0.0000   0.0000   0.0000   0.0000   0.9843   0.0000
+             |
+tou_urbanX~n |   0.4610   0.4042   0.1338   0.0771   0.3298  -0.0010  -0.1120
+             |   0.0000   0.0000   0.0000   0.0000   0.0000   0.9244   0.0000
+             |
+
+             | temp_avg temp_s~d t~_urban t~Xurban
+-------------+------------------------------------
+    temp_avg |   1.0000
+             |
+             |
+temp_sq_ce~d |  -0.7222   1.0000
+             |   0.0000
+             |
+   tou_urban |   0.0541   0.0219   1.0000
+             |   0.0000   0.0344
+             |
+tou_urbanX~n |   0.0614   0.0004   0.7887   1.0000
+             |   0.0000   0.9687   0.0000
+             |
+*******************************************************
+. * 4. ƯỚC LƯỢNG MÔ HÌNH OLS + 2SLS + QAIDS
+. *******************************************************
+. *******************************************************
+. * 7. ƯỚC LƯỢNG MÔ HÌNH OLS
+. *******************************************************
+.
+. * ƯỚC LƯỢNG CÁC MÔ HÌNH OLS VÀ SO SÁNH:
+.
+. reg ln_kwh ln_price_ap ln_income temp_centered temp_sq_centered ///
+>     urban i.region i.dry\_season \[aweight=wt9]
+(sum of wgt is 26,900,734)
+
+      Source |       SS           df       MS      Number of obs   =     9,362
+-------------+----------------------------------   F(11, 9350)     =   1320.41
+       Model |  4569.51498        11  415.410453   Prob > F        =    0.0000
+    Residual |  2941.58227     9,350   .31460773   R-squared       =    0.6084
+-------------+----------------------------------   Adj R-squared   =    0.6079
+       Total |  7511.09725     9,361  .802381931   Root MSE        =     .5609
+
+---
+                          ln_kwh | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                     ln_price_ap |   5.179703   .0603999    85.76   0.000     5.061306      5.2981
+                       ln_income |   .1437778   .0077692    18.51   0.000     .1285485    .1590071
+                   temp_centered |   .0024948   .0026154     0.95   0.340     -.002632    .0076215
+                temp_sq_centered |   .0000647   .0003803     0.17   0.865    -.0006808    .0008102
+                           urban |   .0537645   .0126791     4.24   0.000     .0289107    .0786183
+                                 |
+                          region |
+  Northern Midlands & Mountains  |    -.02232   .0308722    -0.72   0.470    -.0828363    .0381963
+North Central & Central Coastal  |   .1720193   .0205435     8.37   0.000     .1317495    .2122891
+              Central Highlands  |   .0537971   .0359447     1.50   0.135    -.0166623    .1242566
+                      Southeast  |   .0548099   .0217442     2.52   0.012     .0121866    .0974333
+                   Mekong Delta  |   .1058773    .021616     4.90   0.000     .0635053    .1482493
+                                 |
+                      dry_season |
+                     Dry season  |  -.0038852    .013626    -0.29   0.776    -.0305953    .0228248
+                           _cons |   -36.7377   .4111845   -89.35   0.000    -37.54371   -35.93169
+---
+
+.
+. reg ln_kwh ln_price_ap ln_income ln_w_elec temp_centered temp_sq_centered ///
+>     i.urban i.income\_class i.region i.dry\_season  \[aweight=wt9]
+(sum of wgt is 26,900,734)
+
+      Source |       SS           df       MS      Number of obs   =     9,362
+-------------+----------------------------------   F(16, 9345)     =   2857.62
+       Model |  6236.44352        16   389.77772   Prob > F        =    0.0000
+    Residual |  1274.65373     9,345  .136399543   R-squared       =    0.8303
+-------------+----------------------------------   Adj R-squared   =    0.8300
+       Total |  7511.09725     9,361  .802381931   Root MSE        =    .36932
+
+---
+                          ln_kwh | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                     ln_price_ap |   2.325433   .0484596    47.99   0.000     2.230442    2.420424
+                       ln_income |   .2353277   .0115535    20.37   0.000     .2126803     .257975
+                       ln_w_elec |   .6195021   .0057801   107.18   0.000     .6081719    .6308323
+                   temp_centered |   .0007185   .0017225     0.42   0.677    -.0026579    .0040949
+                temp_sq_centered |  -.0002681   .0002505    -1.07   0.284    -.0007592    .0002229
+                                 |
+                           urban |
+                          Urban  |   .0607199   .0083569     7.27   0.000     .0443385    .0771012
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |   -.290113   .0193813   -14.97   0.000    -.3281046   -.2521215
+                             Q2  |  -.0955622   .0133364    -7.17   0.000    -.1217045   -.0694199
+                             Q4  |   .0334914   .0127093     2.64   0.008     .0085785    .0584044
+                   Q5 (Richest)  |  -.0588723   .0176554    -3.33   0.001    -.0934806    -.024264
+                                 |
+                          region |
+  Northern Midlands & Mountains  |  -.0044068   .0203463    -0.22   0.829      -.04429    .0354763
+North Central & Central Coastal  |   .0223192   .0136156     1.64   0.101    -.0043704    .0490087
+              Central Highlands  |   .0168674   .0236829     0.71   0.476    -.0295563    .0632911
+                      Southeast  |   .0057762   .0143561     0.40   0.687    -.0223648    .0339172
+                   Mekong Delta  |  -.0078938    .014287    -0.55   0.581    -.0358994    .0201118
+                                 |
+                      dry_season |
+                     Dry season  |   .0015729   .0089725     0.18   0.861    -.0160151    .0191609
+                           _cons |  -14.44612   .3880863   -37.22   0.000    -15.20685   -13.68538
+---
+
+.
+. reg ln_kwh ln_avg_price_excl_ap ln_income ln_w_elec temp_centered temp_sq_centered ///
+>     i.urban i.income\_class i.region i.dry\_season  \[aweight=wt9]
+(sum of wgt is 26,900,734)
+
+      Source |       SS           df       MS      Number of obs   =     9,362
+-------------+----------------------------------   F(16, 9345)     =   2274.98
+       Model |  5976.68361        16  373.542726   Prob > F        =    0.0000
+    Residual |  1534.41364     9,345  .164196216   R-squared       =    0.7957
+-------------+----------------------------------   Adj R-squared   =    0.7954
+       Total |  7511.09725     9,361  .802381931   Root MSE        =    .40521
+
+---
+                          ln_kwh | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+            ln_avg_price_excl_ap |   1.756117   .0965371    18.19   0.000     1.566883    1.945351
+                       ln_income |   .3445071   .0124157    27.75   0.000     .3201696    .3688446
+                       ln_w_elec |   .7582103   .0053288   142.29   0.000     .7477648    .7686558
+                   temp_centered |  -.0016948     .00194    -0.87   0.382    -.0054976    .0021079
+                temp_sq_centered |  -.0005739   .0002788    -2.06   0.040    -.0011204   -.0000273
+                                 |
+                           urban |
+                          Urban  |   .0977043   .0092696    10.54   0.000     .0795339    .1158747
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.2682032   .0212866   -12.60   0.000    -.3099295   -.2264768
+                             Q2  |  -.1048391   .0146356    -7.16   0.000     -.133528   -.0761503
+                             Q4  |   .0715681   .0139114     5.14   0.000     .0442988    .0988374
+                   Q5 (Richest)  |   .0172722   .0192768     0.90   0.370    -.0205145     .055059
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0705517   .0235505     3.00   0.003     .0243877    .1167157
+North Central & Central Coastal  |   .0197052   .0153874     1.28   0.200    -.0104574    .0498678
+              Central Highlands  |   .0736866   .0272363     2.71   0.007     .0202975    .1270757
+                      Southeast  |   .0102442   .0164423     0.62   0.533    -.0219862    .0424746
+                   Mekong Delta  |  -.0015297   .0171423    -0.09   0.929    -.0351323    .0320729
+                                 |
+                      dry_season |
+                     Dry season  |  -.0019345   .0098939    -0.20   0.845    -.0213287    .0174597
+                           _cons |  -11.54295   .7641478   -15.11   0.000    -13.04085   -10.04506
+---
+
+.
+. reg ln_kwh ln_avg_price_excl_ap ln_income ln_w_elec ///
+>     i.urban i.income\_class \[aweight=wt9]
+(sum of wgt is 26,900,734)
+
+      Source |       SS           df       MS      Number of obs   =     9,362
+-------------+----------------------------------   F(8, 9353)      =   4538.09
+       Model |  5972.44634         8  746.555793   Prob > F        =    0.0000
+    Residual |  1538.65091     9,353  .164508811   R-squared       =    0.7951
+-------------+----------------------------------   Adj R-squared   =    0.7950
+       Total |  7511.09725     9,361  .802381931   Root MSE        =     .4056
+
+---
+              ln_kwh | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+---------------------+----------------------------------------------------------------
+ln_avg_price_excl_ap |   1.660513   .0828555    20.04   0.000     1.498098    1.822927
+           ln_income |   .3437343   .0124208    27.67   0.000     .3193869    .3680817
+           ln_w_elec |   .7578236   .0052978   143.04   0.000     .7474386    .7682085
+                     |
+               urban |
+              Urban  |   .0971556    .009008    10.79   0.000     .0794979    .1148133
+                     |
+        income_class |
+       Q1 (Poorest)  |  -.2692487   .0212632   -12.66   0.000    -.3109292   -.2275681
+                 Q2  |  -.1044592   .0146165    -7.15   0.000    -.1331107   -.0758078
+                 Q4  |   .0707972   .0139222     5.09   0.000     .0435067    .0980876
+       Q5 (Richest)  |   .0163733   .0192814     0.85   0.396    -.0214225     .054169
+                     |
+               _cons |  -10.80138   .6602038   -16.36   0.000    -12.09553    -9.50724
+---
+
+.
+. reg ln_kwh ln_price_ap ln_income ln_w_elec ///
+>     i.urban i.income\_class \[aweight=wt9]
+(sum of wgt is 26,900,734)
+
+      Source |       SS           df       MS      Number of obs   =     9,362
+-------------+----------------------------------   F(8, 9353)      =   5712.31
+       Model |  6234.99531         8  779.374414   Prob > F        =    0.0000
+    Residual |  1276.10194     9,353  .136437714   R-squared       =    0.8301
+-------------+----------------------------------   Adj R-squared   =    0.8300
+       Total |  7511.09725     9,361  .802381931   Root MSE        =    .36937
+
+---
+       ln_kwh | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+  ln_price_ap |   2.327405   .0474231    49.08   0.000     2.234446    2.420365
+    ln_income |   .2346388   .0115446    20.32   0.000     .2120089    .2572687
+    ln_w_elec |   .6202566    .005733   108.19   0.000     .6090186    .6314946
+              |
+        urban |
+       Urban  |   .0586128   .0081675     7.18   0.000     .0426028    .0746228
+              |
+ income_class |
+Q1 (Poorest)  |  -.2923671   .0193534   -15.11   0.000     -.330304   -.2544303
+          Q2  |   -.096898     .01331    -7.28   0.000    -.1229886   -.0708075
+          Q4  |   .0338393   .0127067     2.66   0.008     .0089315    .0587472
+Q5 (Richest)  |  -.0586057    .017642    -3.32   0.001    -.0931879   -.0240235
+              |
+        _cons |  -14.44325   .3798633   -38.02   0.000    -15.18787   -13.69864
+---
+
+.
+. * MÔ HÌNH OLS cho R2 và giải thích tốt nhất:
+.
+. reg ln_kwh ln_price_ap ln_income ln_w_elec temp_centered temp_sq_centered ///
+>     i.urban i.income\_class i.region i.dry\_season  \[aweight=wt9]
+(sum of wgt is 26,900,734)
+
+      Source |       SS           df       MS      Number of obs   =     9,362
+-------------+----------------------------------   F(16, 9345)     =   2857.62
+       Model |  6236.44352        16   389.77772   Prob > F        =    0.0000
+    Residual |  1274.65373     9,345  .136399543   R-squared       =    0.8303
+-------------+----------------------------------   Adj R-squared   =    0.8300
+       Total |  7511.09725     9,361  .802381931   Root MSE        =    .36932
+
+---
+                          ln_kwh | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                     ln_price_ap |   2.325433   .0484596    47.99   0.000     2.230442    2.420424
+                       ln_income |   .2353277   .0115535    20.37   0.000     .2126803     .257975
+                       ln_w_elec |   .6195021   .0057801   107.18   0.000     .6081719    .6308323
+                   temp_centered |   .0007185   .0017225     0.42   0.677    -.0026579    .0040949
+                temp_sq_centered |  -.0002681   .0002505    -1.07   0.284    -.0007592    .0002229
+                                 |
+                           urban |
+                          Urban  |   .0607199   .0083569     7.27   0.000     .0443385    .0771012
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |   -.290113   .0193813   -14.97   0.000    -.3281046   -.2521215
+                             Q2  |  -.0955622   .0133364    -7.17   0.000    -.1217045   -.0694199
+                             Q4  |   .0334914   .0127093     2.64   0.008     .0085785    .0584044
+                   Q5 (Richest)  |  -.0588723   .0176554    -3.33   0.001    -.0934806    -.024264
+                                 |
+                          region |
+  Northern Midlands & Mountains  |  -.0044068   .0203463    -0.22   0.829      -.04429    .0354763
+North Central & Central Coastal  |   .0223192   .0136156     1.64   0.101    -.0043704    .0490087
+              Central Highlands  |   .0168674   .0236829     0.71   0.476    -.0295563    .0632911
+                      Southeast  |   .0057762   .0143561     0.40   0.687    -.0223648    .0339172
+                   Mekong Delta  |  -.0078938    .014287    -0.55   0.581    -.0358994    .0201118
+                                 |
+                      dry_season |
+                     Dry season  |   .0015729   .0089725     0.18   0.861    -.0160151    .0191609
+                           _cons |  -14.44612   .3880863   -37.22   0.000    -15.20685   -13.68538
+---
+
+.
+. reg ln_kwh ln_price_ap ln_income ln_w_elec ///
+>     i.urban i.income\_class \[aweight=wt9]
+(sum of wgt is 26,900,734)
+
+      Source |       SS           df       MS      Number of obs   =     9,362
+-------------+----------------------------------   F(8, 9353)      =   5712.31
+       Model |  6234.99531         8  779.374414   Prob > F        =    0.0000
+    Residual |  1276.10194     9,353  .136437714   R-squared       =    0.8301
+-------------+----------------------------------   Adj R-squared   =    0.8300
+       Total |  7511.09725     9,361  .802381931   Root MSE        =    .36937
+
+---
+       ln_kwh | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+  ln_price_ap |   2.327405   .0474231    49.08   0.000     2.234446    2.420365
+    ln_income |   .2346388   .0115446    20.32   0.000     .2120089    .2572687
+    ln_w_elec |   .6202566    .005733   108.19   0.000     .6090186    .6314946
+              |
+        urban |
+       Urban  |   .0586128   .0081675     7.18   0.000     .0426028    .0746228
+              |
+ income_class |
+Q1 (Poorest)  |  -.2923671   .0193534   -15.11   0.000     -.330304   -.2544303
+          Q2  |   -.096898     .01331    -7.28   0.000    -.1229886   -.0708075
+          Q4  |   .0338393   .0127067     2.66   0.008     .0089315    .0587472
+Q5 (Richest)  |  -.0586057    .017642    -3.32   0.001    -.0931879   -.0240235
+              |
+        _cons |  -14.44325   .3798633   -38.02   0.000    -15.18787   -13.69864
+---
+.
+. ********************************************************
+. * Chạy 2SLS với các IV bổ sung: IV 2: Giá gas, IV 3: Nhiệt độ trung bình tỉnh
+. ********************************************************
+. ivregress 2sls ln_kwh ln_income ln_w_elec temp_centered temp_sq_centered ///
+>     urban i.income\_class i.region i.dry\_season ///
+>     (ln\_price\_mp = ln\_avg\_price\_excl\_mp ln\_gas\_prov) ///
+>     \[aweight=wt9], vce(cluster region) first
+(sum of wgt is   2.4248e+07)
+
+First-stage regressions
+---
+
+                                                      Number of obs   =  9,011
+                                                      No. of clusters =      6
+                                                      F(5, 8993)      =  78.41
+                                                      Prob > F        = 0.0000
+                                                      R-squared       = 0.6346
+                                                      Adj R-squared   = 0.6339
+                                                      Root MSE        = 0.1133
+
+---
+                                 |               Robust
+                     ln_price_mp | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                       ln_income |   .0580033   .0071937     8.06   0.000     .0439021    .0721045
+                       ln_w_elec |   .1102277   .0079925    13.79   0.000     .0945605    .1258949
+                   temp_centered |   .0010577   .0010582     1.00   0.318    -.0010165     .003132
+                temp_sq_centered |   .0000674    .000129     0.52   0.602    -.0001856    .0003203
+                           urban |   .0354297    .007925     4.47   0.000     .0198949    .0509646
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.0512118   .0138263    -3.70   0.000    -.0783145   -.0241091
+                             Q2  |  -.0312617   .0103295    -3.03   0.002    -.0515098   -.0110135
+                             Q4  |   .0358881   .0048124     7.46   0.000     .0264546    .0453215
+                   Q5 (Richest)  |   .0461917   .0071661     6.45   0.000     .0321446    .0602388
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0117383   .0086983     1.35   0.177    -.0053123    .0287888
+North Central & Central Coastal  |   -.019587   .0032489    -6.03   0.000    -.0259555   -.0132184
+              Central Highlands  |  -.0073561   .0091358    -0.81   0.421    -.0252643    .0105521
+                      Southeast  |  -.0167472   .0086191    -1.94   0.052    -.0336425    .0001481
+                   Mekong Delta  |  -.0340849   .0063487    -5.37   0.000    -.0465298   -.0216401
+                                 |
+                      dry_season |
+                     Dry season  |  -.0015581   .0030808    -0.51   0.613    -.0075972    .0044811
+            ln_avg_price_excl_mp |    .418211    .057586     7.26   0.000     .3053293    .5310926
+                     ln_gas_prov |  -6.789717   2.529516    -2.68   0.007    -11.74815   -1.831289
+                           _cons |   74.66222    26.2989     2.84   0.005     23.11038    126.2141
+---
+
+
+Instrumental variables 2SLS regression            Number of obs   =      9,011
+                                                  Wald chi2(16)   =     888.33
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.8365
+                                                  Root MSE        =     .36504
+
+                                                     (Std. err. adjusted for 6 clusters in region)
+---
+                                 |               Robust
+                          ln_kwh | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                     ln_price_mp |   3.225669   .4247639     7.59   0.000     2.393147    4.058191
+                       ln_income |   .1534958   .0351784     4.36   0.000     .0845475    .2224442
+                       ln_w_elec |   .4007985   .0560239     7.15   0.000     .2909937    .5106032
+                   temp_centered |   -.000894   .0021432    -0.42   0.677    -.0050946    .0033066
+                temp_sq_centered |   -.000334   .0002433    -1.37   0.170    -.0008109    .0001429
+                           urban |  -.0070809   .0134389    -0.53   0.598    -.0334206    .0192588
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.1104288   .0241085    -4.58   0.000    -.1576805   -.0631771
+                             Q2  |  -.0066765   .0194911    -0.34   0.732    -.0448785    .0315254
+                             Q4  |  -.0496215   .0232315    -2.14   0.033    -.0951543   -.0040886
+                   Q5 (Richest)  |  -.1370373   .0177782    -7.71   0.000     -.171882   -.1021927
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0524956   .0254009     2.07   0.039     .0027108    .1022803
+North Central & Central Coastal  |   .0761361   .0189311     4.02   0.000     .0390319    .1132403
+              Central Highlands  |   .1215519   .0358756     3.39   0.001     .0512371    .1918667
+                      Southeast  |   .1369189   .0395426     3.46   0.001     .0594168     .214421
+                   Mekong Delta  |   .1176403    .036134     3.26   0.001      .046819    .1884615
+                                 |
+                      dry_season |
+                     Dry season  |   .0118873    .012915     0.92   0.357    -.0134256    .0372002
+                           _cons |  -21.16765   2.931878    -7.22   0.000    -26.91402   -15.42127
+---
+Instrumented: ln_price_mp
+ Instruments: ln_income ln_w_elec temp_centered temp_sq_centered urban 1.income_class
+              2.income_class 3.income_class 4.income_class 1.region 2.region 3.region 4.region
+              5.region 1.dry_season ln_avg_price_excl_mp ln_gas_prov
+
+.
+. ivregress 2sls ln_kwh ln_income ln_w_elec ///
+>     urban i.income\_class i.region i.dry\_season ///
+>     (ln\_price\_mp = ln\_avg\_price\_excl\_mp ln\_gas\_prov) ///
+>     \[aweight=wt9], vce(cluster region) first
+(sum of wgt is   2.4248e+07)
+
+First-stage regressions
+---
+
+                                                      Number of obs   =  9,011
+                                                      No. of clusters =      6
+                                                      F(5, 8995)      =  75.29
+                                                      Prob > F        = 0.0000
+                                                      R-squared       = 0.6344
+                                                      Adj R-squared   = 0.6338
+                                                      Root MSE        = 0.1133
+
+---
+                                 |               Robust
+                     ln_price_mp | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                       ln_income |   .0579729    .007258     7.99   0.000     .0437456    .0722002
+                       ln_w_elec |   .1102631   .0079686    13.84   0.000     .0946428    .1258835
+                           urban |   .0352401   .0078632     4.48   0.000     .0198265    .0506538
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.0511703   .0137229    -3.73   0.000    -.0780704   -.0242703
+                             Q2  |  -.0313197    .010344    -3.03   0.002    -.0515962   -.0110432
+                             Q4  |   .0359264   .0048929     7.34   0.000     .0263351    .0455177
+                   Q5 (Richest)  |   .0462684   .0072453     6.39   0.000     .0320661    .0604708
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0117492   .0088048     1.33   0.182    -.0055103    .0290087
+North Central & Central Coastal  |  -.0194451   .0033656    -5.78   0.000    -.0260426   -.0128477
+              Central Highlands  |  -.0075195   .0095791    -0.78   0.432    -.0262967    .0112577
+                      Southeast  |  -.0167329   .0091091    -1.84   0.066    -.0345887     .001123
+                   Mekong Delta  |  -.0316644   .0063752    -4.97   0.000    -.0441612   -.0191676
+                                 |
+                      dry_season |
+                     Dry season  |  -.0047566   .0016606    -2.86   0.004    -.0080117   -.0015016
+            ln_avg_price_excl_mp |   .4219726   .0581273     7.26   0.000     .3080297    .5359154
+                     ln_gas_prov |  -6.645973    2.73185    -2.43   0.015    -12.00102   -1.290924
+                           _cons |   73.13723   28.45621     2.57   0.010     17.35659    128.9179
+---
+
+
+Instrumental variables 2SLS regression            Number of obs   =      9,011
+                                                  Wald chi2(14)   =     643.65
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.8368
+                                                  Root MSE        =     .36475
+
+                                                     (Std. err. adjusted for 6 clusters in region)
+---
+                                 |               Robust
+                          ln_kwh | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                     ln_price_mp |   3.217426   .4349764     7.40   0.000     2.364888    4.069965
+                       ln_income |   .1539343   .0357396     4.31   0.000      .083886    .2239827
+                       ln_w_elec |   .4015756   .0569587     7.05   0.000     .2899387    .5132126
+                           urban |  -.0067954   .0140339    -0.48   0.628    -.0343014    .0207105
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.1111835   .0246211    -4.52   0.000      -.15944    -.062927
+                             Q2  |  -.0067656   .0196238    -0.34   0.730    -.0452276    .0316963
+                             Q4  |  -.0494155   .0235816    -2.10   0.036    -.0956346   -.0031964
+                   Q5 (Richest)  |   -.136491   .0183839    -7.42   0.000    -.1725228   -.1004592
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0535631   .0256024     2.09   0.036     .0033833    .1037428
+North Central & Central Coastal  |   .0766963   .0191227     4.01   0.000     .0392166    .1141761
+              Central Highlands  |   .1263624   .0350764     3.60   0.000      .057614    .1951108
+                      Southeast  |    .142434   .0384389     3.71   0.000     .0670951    .2177728
+                   Mekong Delta  |    .121037   .0351043     3.45   0.001     .0522338    .1898402
+                                 |
+                      dry_season |
+                     Dry season  |   .0106203   .0088123     1.21   0.228    -.0066515    .0278921
+                           _cons |  -21.11547   3.002363    -7.03   0.000    -26.99999   -15.23095
+---
+Instrumented: ln_price_mp
+ Instruments: ln_income ln_w_elec urban 1.income_class 2.income_class 3.income_class
+              4.income_class 1.region 2.region 3.region 4.region 5.region 1.dry_season
+              ln_avg_price_excl_mp ln_gas_prov
+
+.
+. ivregress 2sls ln_kwh ln_income ln_w_elec ///
+>     urban i.income\_class i.region i.dry\_season ///
+>     (ln\_price\_mp = ln\_avg\_price\_excl\_mp) ///
+>     \[aweight=wt9], vce(cluster region) first
+(sum of wgt is   2.6901e+07)
+
+First-stage regressions
+---
+
+                                                      Number of obs   =  9,362
+                                                      No. of clusters =      6
+                                                      F(5, 9347)      = 330.94
+                                                      Prob > F        = 0.0000
+                                                      R-squared       = 0.6435
+                                                      Adj R-squared   = 0.6429
+                                                      Root MSE        = 0.1130
+
+---
+                                 |               Robust
+                     ln_price_mp | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                       ln_income |   .0594734   .0068575     8.67   0.000     .0460312    .0729155
+                       ln_w_elec |   .1160267   .0049996    23.21   0.000     .1062263    .1258271
+                           urban |   .0326361    .006805     4.80   0.000     .0192968    .0459755
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.0503611   .0129628    -3.89   0.000    -.0757711   -.0249511
+                             Q2  |  -.0309643   .0092685    -3.34   0.001    -.0491326   -.0127961
+                             Q4  |    .039149    .005389     7.26   0.000     .0285854    .0497125
+                   Q5 (Richest)  |   .0471241   .0076717     6.14   0.000     .0320859    .0621624
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0097069    .007054     1.38   0.169    -.0041204    .0235343
+North Central & Central Coastal  |  -.0226772   .0023303    -9.73   0.000    -.0272451   -.0181093
+              Central Highlands  |   -.010983   .0074461    -1.48   0.140     -.025579     .003613
+                      Southeast  |   -.027086   .0037682    -7.19   0.000    -.0344726   -.0196994
+                   Mekong Delta  |  -.0360447   .0046623    -7.73   0.000    -.0451838   -.0269056
+                                 |
+                      dry_season |
+                     Dry season  |   -.001658   .0030545    -0.54   0.587    -.0076455    .0043294
+            ln_avg_price_excl_mp |   .3796839   .0396277     9.58   0.000      .302005    .4573628
+                           _cons |   4.185038   .2954989    14.16   0.000     3.605796     4.76428
+---
+
+
+Instrumental variables 2SLS regression            Number of obs   =      9,362
+                                                  Wald chi2(14)   =    1408.13
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.8446
+                                                  Root MSE        =     .35305
+
+                                                     (Std. err. adjusted for 6 clusters in region)
+---
+                                 |               Robust
+                          ln_kwh | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                     ln_price_mp |   3.131256   .4777959     6.55   0.000     2.194793    4.067718
+                       ln_income |   .1587958   .0400521     3.96   0.000      .080295    .2372966
+                       ln_w_elec |    .392626    .054219     7.24   0.000     .2863586    .4988933
+                           urban |  -.0035926   .0149395    -0.24   0.810    -.0328736    .0256883
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.1089846   .0215908    -5.05   0.000    -.1513017   -.0666674
+                             Q2  |  -.0062546   .0171747    -0.36   0.716    -.0399163    .0274071
+                             Q4  |  -.0529878   .0214146    -2.47   0.013    -.0949596   -.0110161
+                   Q5 (Richest)  |  -.1326288   .0171923    -7.71   0.000    -.1663251   -.0989325
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0424276   .0245187     1.73   0.084    -.0056282    .0904834
+North Central & Central Coastal  |   .0739121   .0204341     3.62   0.000     .0338619    .1139623
+              Central Highlands  |   .1133118   .0363344     3.12   0.002     .0420977    .1845259
+                      Southeast  |   .1056825   .0298285     3.54   0.000     .0472198    .1641453
+                   Mekong Delta  |   .1115502   .0381074     2.93   0.003     .0368611    .1862393
+                                 |
+                      dry_season |
+                     Dry season  |   .0020759    .011818     0.18   0.861     -.021087    .0252388
+                           _cons |  -20.55076   3.246237    -6.33   0.000    -26.91327   -14.18825
+---
+Instrumented: ln_price_mp
+ Instruments: ln_income ln_w_elec urban 1.income_class 2.income_class 3.income_class
+              4.income_class 1.region 2.region 3.region 4.region 5.region 1.dry_season
+              ln_avg_price_excl_mp
+ ********************************************************
+. * So sánh OLS tối ưu và 2SLS tối ưu
+. ********************************************************
+. * Lấy coefficient của ln_price_mp để so sánh OLS vs 2SLS
+. eststo ols: reg ln_kwh ln_price_mp ln_income ln_w_elec ///
+>     urban i.income\_class i.region i.dry\_season \[aweight=wt9], vce(cluster region)
+(sum of wgt is 26,900,734)
+
+Linear regression                               Number of obs     =      9,362
+                                                F(4, 5)           =          .
+                                                Prob > F          =          .
+                                                R-squared         =     0.8623
+                                                Root MSE          =     .33266
+
+                                                     (Std. err. adjusted for 6 clusters in region)
+---
+                                 |               Robust
+                          ln_kwh | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                     ln_price_mp |   2.104459   .0932393    22.57   0.000      1.86478    2.344138
+                       ln_income |   .2206907   .0242774     9.09   0.000     .1582838    .2830976
+                       ln_w_elec |    .518547   .0373657    13.88   0.000     .4224953    .6145987
+                           urban |   .0433495   .0139013     3.12   0.026     .0076151     .079084
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.1670298   .0175779    -9.50   0.000    -.2122151   -.1218444
+                             Q2  |   -.041901   .0083146    -5.04   0.004    -.0632744   -.0205276
+                             Q4  |  -.0094775   .0071721    -1.32   0.244     -.027914    .0089589
+                   Q5 (Richest)  |   -.078955   .0250462    -3.15   0.025    -.1433384   -.0145716
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0053955   .0121358     0.44   0.675    -.0258004    .0365915
+North Central & Central Coastal  |   .0319129   .0048377     6.60   0.001     .0194772    .0443486
+              Central Highlands  |   .0492697   .0105469     4.67   0.005      .022158    .0763814
+                      Southeast  |    .045982   .0038526    11.94   0.000     .0360786    .0558854
+                   Mekong Delta  |   .0344287   .0046973     7.33   0.001      .022354    .0465034
+                                 |
+                      dry_season |
+                     Dry season  |   .0005911   .0107836     0.05   0.958     -.027129    .0283112
+                           _cons |   -13.2053   .6155022   -21.45   0.000     -14.7875    -11.6231
+---
+
+.
+. eststo iv: ivregress 2sls ln_kwh ln_income ln_w_elec ///
+>     urban i.income\_class i.region i.dry\_season ///
+>     (ln\_price\_mp = ln\_avg\_price\_excl\_mp) ///
+>     \[aweight=wt9], vce(cluster region)
+(sum of wgt is   2.6901e+07)
+
+Instrumental variables 2SLS regression            Number of obs   =      9,362
+                                                  Wald chi2(14)   =    1408.13
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.8446
+                                                  Root MSE        =     .35305
+
+                                                     (Std. err. adjusted for 6 clusters in region)
+---
+                                 |               Robust
+                          ln_kwh | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                     ln_price_mp |   3.131256   .4777959     6.55   0.000     2.194793    4.067718
+                       ln_income |   .1587958   .0400521     3.96   0.000      .080295    .2372966
+                       ln_w_elec |    .392626    .054219     7.24   0.000     .2863586    .4988933
+                           urban |  -.0035926   .0149395    -0.24   0.810    -.0328736    .0256883
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.1089846   .0215908    -5.05   0.000    -.1513017   -.0666674
+                             Q2  |  -.0062546   .0171747    -0.36   0.716    -.0399163    .0274071
+                             Q4  |  -.0529878   .0214146    -2.47   0.013    -.0949596   -.0110161
+                   Q5 (Richest)  |  -.1326288   .0171923    -7.71   0.000    -.1663251   -.0989325
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0424276   .0245187     1.73   0.084    -.0056282    .0904834
+North Central & Central Coastal  |   .0739121   .0204341     3.62   0.000     .0338619    .1139623
+              Central Highlands  |   .1133118   .0363344     3.12   0.002     .0420977    .1845259
+                      Southeast  |   .1056825   .0298285     3.54   0.000     .0472198    .1641453
+                   Mekong Delta  |   .1115502   .0381074     2.93   0.003     .0368611    .1862393
+                                 |
+                      dry_season |
+                     Dry season  |   .0020759    .011818     0.18   0.861     -.021087    .0252388
+                           _cons |  -20.55076   3.246237    -6.33   0.000    -26.91327   -14.18825
+---
+Instrumented: ln_price_mp
+ Instruments: ln_income ln_w_elec urban 1.income_class 2.income_class 3.income_class
+              4.income_class 1.region 2.region 3.region 4.region 5.region 1.dry_season
+              ln_avg_price_excl_mp
+
+.
+. esttab ols iv, se label star(* 0.10 ** 0.05 *** 0.01) ///
+>     title("OLS vs 2SLS Comparison") replace
+
+OLS vs 2SLS Comparison
+---
+                              (1)             (2)
+                           ln_kwh          ln_kwh
+---
+ln_price_mp                 2.104***        3.131***
+                         (0.0932)         (0.478)
+
+ln_income                   0.221***        0.159***
+                         (0.0243)        (0.0401)
+
+ln_w_elec                   0.519***        0.393***
+                         (0.0374)        (0.0542)
+
+urban                      0.0433**      -0.00359
+                         (0.0139)        (0.0149)
+
+Q3 (Baseline)                   0               0
+                              (.)             (.)
+
+Q1 (Poorest)               -0.167***       -0.109***
+                         (0.0176)        (0.0216)
+
+Q2                        -0.0419***     -0.00625
+                        (0.00831)        (0.0172)
+
+Q4                       -0.00948         -0.0530**
+                        (0.00717)        (0.0214)
+
+Q5 (Richest)              -0.0790**        -0.133***
+                         (0.0250)        (0.0172)
+
+Red River Delta (r~)            0               0
+                              (.)             (.)
+
+Northern Midlands ~s      0.00540          0.0424*
+                         (0.0121)        (0.0245)
+
+North Central & Ce~l       0.0319***       0.0739***
+                        (0.00484)        (0.0204)
+
+Central Highlands          0.0493***        0.113***
+                         (0.0105)        (0.0363)
+
+Southeast                  0.0460***        0.106***
+                        (0.00385)        (0.0298)
+
+Mekong Delta               0.0344***        0.112***
+                        (0.00470)        (0.0381)
+
+Wet season                      0               0
+                              (.)             (.)
+
+Dry season               0.000591         0.00208
+                         (0.0108)        (0.0118)
+
+Constant                   -13.21***       -20.55***
+                          (0.616)         (3.246)
+---
+Observations                 9362            9362
+---
+Standard errors in parentheses
+* p<0.10, ** p<0.05, *** p<0.01
+
+ ********************************************************
+. * Optional: kiểm tra đồ thị first-stage
+. ********************************************************
+. predict ln_price_hat if e(sample), xb
+
+. scatter ln_price_mp ln_price_hat
+
+.
+. * Weak instrument test
+. estat firststage
+
+  First-stage regression summary statistics
+  --------------------------------------------------------------------------
+               |            Adjusted      Partial       Robust
+      Variable |   R-sq.       R-sq.        R-sq.        F(1,5)   Prob > F
+  -------------+------------------------------------------------------------
+   ln_price_mp |  0.6435      0.6429       0.0512       91.8305    0.0002
+  --------------------------------------------------------------------------
+  (F statistic adjusted for 6 clusters in region)
+
+ * Mô hình QAIDS (SUR) tối ưu:
+. sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.i
+> ncome\_class) \[aweight=wt9], isure
+
+Iteration 1:   tolerance =  6.124e-12
+
+Seemingly unrelated regression, iterated
+---
+Equation             Obs   Params         RMSE  "R-squared"      chi2   P>chi2
+---
+w_elec             9,011       18     .0114444      0.8716   61176.22   0.0000
+---
+
+---
+                          w_elec | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+w_elec                           |
+                            ln_P |  -.2941119   .0014111  -208.43   0.000    -.2968775   -.2913462
+                          ln_x_P |  -.0062912    .002538    -2.48   0.013    -.0112656   -.0013167
+                       ln_x_P_sq |   .0000605     .00015     0.40   0.687    -.0002334    .0003544
+                       tou_urban |   .0221841   .0018911    11.73   0.000     .0184776    .0258906
+                   temp_centered |  -.0010952   .0000559   -19.61   0.000    -.0012046   -.0009857
+                temp_sq_centered |  -.0000811   7.76e-06   -10.44   0.000    -.0000963   -.0000659
+                       ln_income |   .0019652   .0003682     5.34   0.000     .0012435    .0026869
+                           urban |   .0016174   .0002639     6.13   0.000     .0011003    .0021346
+                      dry_season |   .0024134   .0002928     8.24   0.000     .0018394    .0029873
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0025729   .0007975     3.23   0.001     .0010098     .004136
+North Central & Central Coastal  |   .0050495   .0006642     7.60   0.000     .0037477    .0063512
+              Central Highlands  |   .0013312   .0008758     1.52   0.129    -.0003853    .0030476
+                      Southeast  |   .0007204   .0007034     1.02   0.306    -.0006581     .002099
+                   Mekong Delta  |   .0048785     .00068     7.17   0.000     .0035458    .0062112
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |   -.000644   .0006122    -1.05   0.293    -.0018439    .0005559
+                             Q2  |  -.0003367   .0004207    -0.80   0.424    -.0011613    .0004879
+                             Q4  |  -.0000532   .0004059    -0.13   0.896    -.0008487    .0007423
+                   Q5 (Richest)  |  -.0000367   .0005616    -0.07   0.948    -.0011374     .001064
+                                 |
+                           _cons |   3.084122   .0180353   171.00   0.000     3.048773     3.11947
+---
+
+
+. * Kiểm định bậc hai λ ≠ 0
+. test [w_elec]ln_x_P_sq = 0
+
+ ( 1)  [w_elec]ln_x_P_sq = 0
+
+           chi2(  1) =    0.16
+         Prob > chi2 =    0.6868
+
+ * Chi2(1) =  0.16, p = 0.6868 (thành phần bình phương ln_x_P_sq không cần thiết trong mô hình, loại bỏ để tinh gọn mô
+> hình QAIDS)
+. sureg (w_elec = ln_P ln_x_P tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.income_clas
+> s) \[aweight=wt9], isure
+
+Iteration 1:   tolerance =  2.062e-12
+
+Seemingly unrelated regression, iterated
+---
+Equation             Obs   Params         RMSE  "R-squared"      chi2   P>chi2
+---
+w_elec             9,011       17     .0114445      0.8716   61174.96   0.0000
+---
+
+---
+                          w_elec | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+w_elec                           |
+                            ln_P |  -.2941238   .0014108  -208.48   0.000    -.2968888   -.2913587
+                          ln_x_P |  -.0052745   .0002905   -18.16   0.000    -.0058438   -.0047052
+                       tou_urban |   .0221792   .0018911    11.73   0.000     .0184727    .0258856
+                   temp_centered |  -.0010953   .0000559   -19.61   0.000    -.0012047   -.0009858
+                temp_sq_centered |  -.0000811   7.76e-06   -10.45   0.000    -.0000963   -.0000659
+                       ln_income |   .0019468   .0003654     5.33   0.000     .0012306    .0026629
+                           urban |   .0016176   .0002639     6.13   0.000     .0011004    .0021347
+                      dry_season |    .002414   .0002928     8.24   0.000       .00184    .0029879
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0025672   .0007974     3.22   0.001     .0010043    .0041301
+North Central & Central Coastal  |    .005049   .0006642     7.60   0.000     .0037473    .0063508
+              Central Highlands  |   .0013323   .0008758     1.52   0.128    -.0003841    .0030488
+                      Southeast  |   .0007234   .0007033     1.03   0.304    -.0006551    .0021019
+                   Mekong Delta  |   .0048759     .00068     7.17   0.000     .0035432    .0062086
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |  -.0006182   .0006088    -1.02   0.310    -.0018115    .0005752
+                             Q2  |  -.0003368   .0004207    -0.80   0.423    -.0011614    .0004879
+                             Q4  |  -.0000437   .0004052    -0.11   0.914    -.0008378    .0007505
+                   Q5 (Richest)  |  -5.49e-06   .0005562    -0.01   0.992    -.0010957    .0010847
+                                 |
+                           _cons |   3.080288   .0153259   200.99   0.000      3.05025    3.110326
+---
+
+Phần Kiểm định độ vững mô hình QAISD tối ưu:
+
+. * Kiểm đinh phần dư residuals / outliers
+. predict resid_w_elec, resid
+(351 missing values generated)
+. summarize resid_w_elec
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+resid_w_elec |      9,011    7.95e-06    .0114119  -.0355968   .0476068
+
+. * Breusch–Pagan / Cook–Weisberg test (heteroskedasticity)
+. sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.i
+> ncome\_class) \[aweight=wt9], isure
+
+Iteration 1:   tolerance =  6.124e-12
+
+Seemingly unrelated regression, iterated
+---
+Equation             Obs   Params         RMSE  "R-squared"      chi2   P>chi2
+---
+w_elec             9,011       18     .0114444      0.8716   61176.22   0.0000
+---
+
+---
+                          w_elec | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+w_elec                           |
+                            ln_P |  -.2941119   .0014111  -208.43   0.000    -.2968775   -.2913462
+                          ln_x_P |  -.0062912    .002538    -2.48   0.013    -.0112656   -.0013167
+                       ln_x_P_sq |   .0000605     .00015     0.40   0.687    -.0002334    .0003544
+                       tou_urban |   .0221841   .0018911    11.73   0.000     .0184776    .0258906
+                   temp_centered |  -.0010952   .0000559   -19.61   0.000    -.0012046   -.0009857
+                temp_sq_centered |  -.0000811   7.76e-06   -10.44   0.000    -.0000963   -.0000659
+                       ln_income |   .0019652   .0003682     5.34   0.000     .0012435    .0026869
+                           urban |   .0016174   .0002639     6.13   0.000     .0011003    .0021346
+                      dry_season |   .0024134   .0002928     8.24   0.000     .0018394    .0029873
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0025729   .0007975     3.23   0.001     .0010098     .004136
+North Central & Central Coastal  |   .0050495   .0006642     7.60   0.000     .0037477    .0063512
+              Central Highlands  |   .0013312   .0008758     1.52   0.129    -.0003853    .0030476
+                      Southeast  |   .0007204   .0007034     1.02   0.306    -.0006581     .002099
+                   Mekong Delta  |   .0048785     .00068     7.17   0.000     .0035458    .0062112
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |   -.000644   .0006122    -1.05   0.293    -.0018439    .0005559
+                             Q2  |  -.0003367   .0004207    -0.80   0.424    -.0011613    .0004879
+                             Q4  |  -.0000532   .0004059    -0.13   0.896    -.0008487    .0007423
+                   Q5 (Richest)  |  -.0000367   .0005616    -0.07   0.948    -.0011374     .001064
+                                 |
+                           _cons |   3.084122   .0180353   171.00   0.000     3.048773     3.11947
+---
+
+
+. sktest ehat
+
+Skewness and kurtosis tests for normality
+                                                         ----- Joint test -----
+    Variable |       Obs   Pr(skewness)   Pr(kurtosis)   Adj chi2(2)  Prob>chi2
+-------------+-----------------------------------------------------------------
+        ehat |     9,011         0.0193         0.2617          6.71     0.0350
+
+. swilk ehat
+
+                   Shapiro–Wilk W test for normal data
+
+    Variable |        Obs       W           V         z       Prob>z
+-------------+------------------------------------------------------
+        ehat |      9,011    0.99395     27.536     8.851    0.00000
+
+Note: The normal approximation to the sampling distribution of W'
+      is valid for 4<=n<=2000.
+ * Kiểm định dạng hàm (Functional form): Ramsey RESET
+. reg w_elec ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ln_income urban dry_season i.region i.income
+> \_class \[aweight=wt9]
+(sum of wgt is 24,247,927)
+
+      Source |       SS           df       MS      Number of obs   =     9,011
+-------------+----------------------------------   F(18, 8992)     =   3391.51
+       Model |  8.01254788        18  .445141549   Prob > F        =    0.0000
+    Residual |  1.18021452     8,992  .000131252   R-squared       =    0.8716
+-------------+----------------------------------   Adj R-squared   =    0.8714
+       Total |   9.1927624     9,010  .001020284   Root MSE        =    .01146
+
+---
+                          w_elec | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                            ln_P |  -.2941119   .0014126  -208.21   0.000    -.2968808   -.2913429
+                          ln_x_P |  -.0062912   .0025407    -2.48   0.013    -.0112716   -.0013108
+                       ln_x_P_sq |   .0000605   .0001501     0.40   0.687    -.0002338    .0003547
+                       tou_urban |   .0221841   .0018931    11.72   0.000     .0184732     .025895
+                   temp_centered |  -.0010952   .0000559   -19.59   0.000    -.0012048   -.0009856
+                temp_sq_centered |  -.0000811   7.77e-06   -10.43   0.000    -.0000963   -.0000658
+                       ln_income |   .0019652   .0003686     5.33   0.000     .0012426    .0026878
+                           urban |   .0016174   .0002641     6.12   0.000     .0010996    .0021352
+                      dry_season |   .0024134   .0002931     8.23   0.000     .0018387     .002988
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0025729   .0007984     3.22   0.001      .001008    .0041379
+North Central & Central Coastal  |   .0050495   .0006649     7.59   0.000     .0037462    .0063528
+              Central Highlands  |   .0013312   .0008767     1.52   0.129    -.0003873    .0030497
+                      Southeast  |   .0007204   .0007041     1.02   0.306    -.0006598    .0021006
+                   Mekong Delta  |   .0048785   .0006807     7.17   0.000     .0035442    .0062128
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |   -.000644   .0006129    -1.05   0.293    -.0018453    .0005573
+                             Q2  |  -.0003367   .0004212    -0.80   0.424    -.0011623    .0004889
+                             Q4  |  -.0000532   .0004063    -0.13   0.896    -.0008496    .0007432
+                   Q5 (Richest)  |  -.0000367   .0005622    -0.07   0.948    -.0011387    .0010653
+                                 |
+                           _cons |   3.084122   .0180544   170.82   0.000     3.048731    3.119512
+---
+
+. ovtest
+
+Ramsey RESET test for omitted variables
+Omitted: Powers of fitted values of w_elec
+
+H0: Model has no omitted variables
+
+F(3, 8989) = 421.07
+  Prob > F = 0.0000
+. * Kiểm định Wald cho temp_sq_centered
+. test temp_sq_centered = 0
+
+ ( 1)  temp_sq_centered = 0
+
+       F(  1,  8992) =  108.84
+            Prob > F =    0.0000
+
+. test temp_centered temp_sq_centered
+
+ ( 1)  temp_centered = 0
+ ( 2)  temp_sq_centered = 0
+
+       F(  2,  8992) =  199.00
+            Prob > F =    0.0000
+
+. * Kiểm tra đa thức QAIDS (Quadratic term significance)
+. test ln_x_P_sq
+
+ ( 1)  ln_x_P_sq = 0
+
+       F(  1,  8992) =    0.16
+            Prob > F =    0.6871
+. *******************************************************
+. * 1. CALCULATE ELASTICITIES (ĐỘ CO GIÃN) Tính toán độ co giãn trong QAIDS
+. *******************************************************
+. * --- Trung bình toàn mẫu ---
+. summarize price_elasticity_marshall price_elasticity_hicks income_elasticity
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+price_elas~l |      9,362   -14.96996    50.50913   -2385.14  -.7366935
+price_elas~s |      9,362   -14.92077    50.51733  -2385.138  -.3366391
+income_ela~y |      9,362    1.100376    .3388882   1.004937   17.00523
+
+* --- Trung bình theo vùng ---
+Summary for variables: price_elasticity_marshall price_elasticity_hicks income_elasticity
+Group variable: region
+
+          region |      Mean        SD       Min       Max
+-----------------+----------------------------------------
+Red River Delta  | -19.75736         . -19.75736 -19.75736
+                 | -19.70892         . -19.70892 -19.70892
+                 |  1.132453         .  1.132453  1.132453
+-----------------+----------------------------------------
+Northern Midland | -27.97432         . -27.97432 -27.97432
+                 | -27.92988         . -27.92988 -27.92988
+                 |  1.187559         .  1.187559  1.187559
+-----------------+----------------------------------------
+North Central &  |  -9.70248         .  -9.70248  -9.70248
+                 | -9.645201         . -9.645201 -9.645201
+                 |  1.065059         .  1.065059  1.065059
+-----------------+----------------------------------------
+Central Highland | -16.07677         . -16.07677 -16.07677
+                 | -16.03644         . -16.03644 -16.03644
+                 |   1.10779         .   1.10779   1.10779
+-----------------+----------------------------------------
+       Southeast |  -15.7319         .  -15.7319  -15.7319
+                 | -15.68755         . -15.68755 -15.68755
+                 |  1.105489         .  1.105489  1.105489
+-----------------+----------------------------------------
+    Mekong Delta | -13.69521         . -13.69521 -13.69521
+                 | -13.64656         . -13.64656 -13.64656
+                 |  1.091837         .  1.091837  1.091837
+-----------------+----------------------------------------
+           Total | -17.15634  6.237435 -27.97432  -9.70248
+                 | -17.10909  6.240491 -27.92988 -9.645201
+                 |  1.115031  .0418152  1.065059  1.187559
+---
+
+. * --- Trung bình theo nhóm thu nhập ---
+
+ income_class |      Mean        SD       Min       Max
+--------------+----------------------------------------
+Q3 (Baseline) | -11.94428         . -11.94428 -11.94428
+              | -11.89498         . -11.89498 -11.89498
+              |  1.080087         .  1.080087  1.080087
+--------------+----------------------------------------
+ Q1 (Poorest) | -18.65947         . -18.65947 -18.65947
+              | -18.61108         . -18.61108 -18.61108
+              |  1.125071         .  1.125071  1.125071
+--------------+----------------------------------------
+           Q2 | -17.99372         . -17.99372 -17.99372
+              | -17.94569         . -17.94569 -17.94569
+              |  1.120642         .  1.120642  1.120642
+--------------+----------------------------------------
+           Q4 | -13.91248         . -13.91248 -13.91248
+              | -13.86256         . -13.86256 -13.86256
+              |  1.093322         .  1.093322  1.093322
+--------------+----------------------------------------
+ Q5 (Richest) | -12.33564         . -12.33564 -12.33564
+              | -12.28529         . -12.28529 -12.28529
+              |   1.08273         .   1.08273   1.08273
+--------------+----------------------------------------
+        Total | -14.96912  3.161022 -18.65947 -11.94428
+              | -14.91992  3.161862 -18.61108 -11.89498
+              |   1.10037  .0211738  1.080087  1.125071
+---
+
+Sau khi Loại bỏ các giá trị ngoại lai:
+
+. *******************************************************
+. * 3. SUMMARY TOÀN MẪU (sau Winsorize)
+. *******************************************************
+. summarize price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w, detail
+
+                 price_elasticity_marshall_w
+---
+      Percentiles      Smallest
+ 1%    -151.4154       -2385.14
+ 5%    -47.82749      -1963.042
+10%    -21.73188      -1145.321       Obs               9,362
+25%    -11.08234      -1116.759       Sum of wgt.       9,362
+
+50%    -7.070057                      Mean          -14.96996
+                        Largest       Std. dev.      50.50913
+75%    -4.772473      -1.096555
+90%    -3.410804      -1.018236       Variance       2551.172
+95%    -2.820834      -.9782097       Skewness      -23.87021
+99%    -1.848961      -.7366935       Kurtosis        864.423
+
+                  price_elasticity_hicks_w
+---
+      Percentiles      Smallest
+ 1%    -151.4115      -2385.138
+ 5%    -47.81939       -1963.04
+10%    -21.71643      -1145.319       Obs               9,362
+25%    -11.05393      -1116.757       Sum of wgt.       9,362
+
+50%    -7.026627                      Mean          -14.92077
+                        Largest       Std. dev.      50.51733
+75%    -4.709105      -.8270109
+90%    -3.322864      -.7283131       Variance       2552.001
+95%    -2.714957      -.6764993       Skewness      -23.86124
+99%    -1.688401      -.3366391       Kurtosis       863.9503
+
+                     income_elasticity_w
+---
+      Percentiles      Smallest
+ 1%     1.012391       1.004937
+ 5%     1.018912       1.006556
+10%      1.02286       1.006825       Obs               9,362
+25%     1.032005       1.007344       Sum of wgt.       9,362
+
+50%     1.047394                      Mean           1.100376
+                        Largest       Std. dev.      .3388882
+75%     1.074311       8.494514
+90%     1.145688       8.677697       Variance       .1148452
+95%     1.320666       14.19434       Skewness       23.89973
+99%      2.01524       17.00523       Kurtosis       866.2667
+
+. *******************************************************
+. * 4. SUMMARY THEO VÙNG
+. *******************************************************
+. preserve
+
+. collapse (mean) price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w, by(region)
+
+. tabstat price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w, ///
+>     by(region) statistics(mean sd min max) columns(statistics)
+
+Summary for variables: price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w
+Group variable: region
+
+          region |      Mean        SD       Min       Max
+-----------------+----------------------------------------
+Red River Delta  | -19.75736         . -19.75736 -19.75736
+                 | -19.70892         . -19.70892 -19.70892
+                 |  1.132453         .  1.132453  1.132453
+-----------------+----------------------------------------
+Northern Midland | -27.97432         . -27.97432 -27.97432
+                 | -27.92988         . -27.92988 -27.92988
+                 |  1.187559         .  1.187559  1.187559
+-----------------+----------------------------------------
+North Central &  |  -9.70248         .  -9.70248  -9.70248
+                 | -9.645201         . -9.645201 -9.645201
+                 |  1.065059         .  1.065059  1.065059
+-----------------+----------------------------------------
+Central Highland | -16.07677         . -16.07677 -16.07677
+                 | -16.03644         . -16.03644 -16.03644
+                 |   1.10779         .   1.10779   1.10779
+-----------------+----------------------------------------
+       Southeast |  -15.7319         .  -15.7319  -15.7319
+                 | -15.68755         . -15.68755 -15.68755
+                 |  1.105489         .  1.105489  1.105489
+-----------------+----------------------------------------
+    Mekong Delta | -13.69521         . -13.69521 -13.69521
+                 | -13.64656         . -13.64656 -13.64656
+                 |  1.091837         .  1.091837  1.091837
+-----------------+----------------------------------------
+           Total | -17.15634  6.237435 -27.97432  -9.70248
+                 | -17.10909  6.240491 -27.92988 -9.645201
+                 |  1.115031  .0418152  1.065059  1.187559
+---
+
+. restore
+. *******************************************************
+. * 5. SUMMARY THEO NHÓM THU NHẬP
+. *******************************************************
+Summary for variables: price_elasticity_marshall_w price_elasticity_hicks_w income_elasticity_w
+Group variable: income_class
+
+ income_class |      Mean        SD       Min       Max
+--------------+----------------------------------------
+Q3 (Baseline) | -11.94428         . -11.94428 -11.94428
+              | -11.89498         . -11.89498 -11.89498
+              |  1.080087         .  1.080087  1.080087
+--------------+----------------------------------------
+ Q1 (Poorest) | -18.65947         . -18.65947 -18.65947
+              | -18.61108         . -18.61108 -18.61108
+              |  1.125071         .  1.125071  1.125071
+--------------+----------------------------------------
+           Q2 | -17.99372         . -17.99372 -17.99372
+              | -17.94569         . -17.94569 -17.94569
+              |  1.120642         .  1.120642  1.120642
+--------------+----------------------------------------
+           Q4 | -13.91248         . -13.91248 -13.91248
+              | -13.86256         . -13.86256 -13.86256
+              |  1.093322         .  1.093322  1.093322
+--------------+----------------------------------------
+ Q5 (Richest) | -12.33564         . -12.33564 -12.33564
+              | -12.28529         . -12.28529 -12.28529
+              |   1.08273         .   1.08273   1.08273
+--------------+----------------------------------------
+        Total | -14.96912  3.161022 -18.65947 -11.94428
+              | -14.91992  3.161862 -18.61108 -11.89498
+              |   1.10037  .0211738  1.080087  1.125071
+---
+
+. *******************************************************
+. *  ELASTICITIES FOR TEMPERATURE AND SEASON
+. ******************************************************
+ * --- Trung bình theo vùng ---
+Summary statistics: Mean, SD, Min, Max
+Group variable: region
+
+          region |  temp_e~y  drysea~y
+-----------------+--------------------
+Red River Delta  | -.0000556  .0063988
+                 |         .         .
+                 | -.0000556  .0063988
+                 | -.0000556  .0063988
+-----------------+--------------------
+Northern Midland | -.0000616  .0084338
+                 |         .         .
+                 | -.0000616  .0084338
+                 | -.0000616  .0084338
+-----------------+--------------------
+North Central &  | -.0000237  .0022538
+                 |         .         .
+                 | -.0000237  .0022538
+                 | -.0000237  .0022538
+-----------------+--------------------
+Central Highland | -.0000119  .0043496
+                 |         .         .
+                 | -.0000119  .0043496
+                 | -.0000119  .0043496
+-----------------+--------------------
+       Southeast | -7.30e-06  .0037269
+                 |         .         .
+                 | -7.30e-06  .0037269
+                 | -7.30e-06  .0037269
+-----------------+--------------------
+    Mekong Delta | -.0000407  .0030474
+                 |         .         .
+                 | -.0000407  .0030474
+                 | -.0000407  .0030474
+-----------------+--------------------
+           Total | -.0000335  .0047017
+                 |  .0000227   .002307
+                 | -.0000616  .0022538
+                 | -7.30e-06  .0084338
+---
+* --- Trung bình theo nhóm thu nhập ---
+. collapse (mean) temp_elasticity dryseason_elasticity, by(income_class)
+
+. tabstat temp_elasticity dryseason_elasticity, by(income_class) statistics(mean sd min max)
+
+Summary statistics: Mean, SD, Min, Max
+Group variable: income_class
+
+ income_class |  temp_e~y  drysea~y
+--------------+--------------------
+Q3 (Baseline) | -.0000184  .0023897
+              |         .         .
+              | -.0000184  .0023897
+              | -.0000184  .0023897
+--------------+--------------------
+ Q1 (Poorest) | -.0000766  .0088235
+              |         .         .
+              | -.0000766  .0088235
+              | -.0000766  .0088235
+--------------+--------------------
+           Q2 | -.0000294  .0045888
+              |         .         .
+              | -.0000294  .0045888
+              | -.0000294  .0045888
+--------------+--------------------
+           Q4 | -.0000177  .0018105
+              |         .         .
+              | -.0000177  .0018105
+              | -.0000177  .0018105
+--------------+--------------------
+ Q5 (Richest) | -.0000151  .0015253
+              |         .         .
+              | -.0000151  .0015253
+              | -.0000151  .0015253
+--------------+--------------------
+        Total | -.0000314  .0038276
+              |  .0000258  .0030404
+              | -.0000766  .0015253
+              | -.0000151  .0088235
+---
+ *******************************************************
+. * 1. MÔ HÌNH QAIDS (SUR) TỐI ƯU
+. *******************************************************
+. sureg (w_elec = ln_P ln_x_P ln_x_P_sq tou_urban temp_centered temp_sq_centered ///
+>        ln\_income urban dry\_season i.region i.income\_class) ///
+>        \[aweight=wt9], isure
+
+Iteration 1:   tolerance =  1.336e-12
+
+Seemingly unrelated regression, iterated
+---
+Equation             Obs   Params         RMSE  "R-squared"      chi2   P>chi2
+---
+w_elec             9,011       18     .0114444      0.8716   61176.22   0.0000
+---
+
+---
+                          w_elec | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+w_elec                           |
+                            ln_P |  -.2941119   .0014111  -208.43   0.000    -.2968775   -.2913462
+                          ln_x_P |  -.0062912    .002538    -2.48   0.013    -.0112656   -.0013167
+                       ln_x_P_sq |   .0000605     .00015     0.40   0.687    -.0002334    .0003544
+                       tou_urban |   .0221841   .0018911    11.73   0.000     .0184776    .0258906
+                   temp_centered |  -.0010952   .0000559   -19.61   0.000    -.0012046   -.0009857
+                temp_sq_centered |  -.0000811   7.76e-06   -10.44   0.000    -.0000963   -.0000659
+                       ln_income |   .0019652   .0003682     5.34   0.000     .0012435    .0026869
+                           urban |   .0016174   .0002639     6.13   0.000     .0011003    .0021346
+                      dry_season |   .0024134   .0002928     8.24   0.000     .0018394    .0029873
+                                 |
+                          region |
+  Northern Midlands & Mountains  |   .0025729   .0007975     3.23   0.001     .0010098     .004136
+North Central & Central Coastal  |   .0050495   .0006642     7.60   0.000     .0037477    .0063512
+              Central Highlands  |   .0013312   .0008758     1.52   0.129    -.0003853    .0030476
+                      Southeast  |   .0007204   .0007034     1.02   0.306    -.0006581     .002099
+                   Mekong Delta  |   .0048785     .00068     7.17   0.000     .0035458    .0062112
+                                 |
+                    income_class |
+                   Q1 (Poorest)  |   -.000644   .0006122    -1.05   0.293    -.0018439    .0005559
+                             Q2  |  -.0003367   .0004207    -0.80   0.424    -.0011613    .0004879
+                             Q4  |  -.0000532   .0004059    -0.13   0.896    -.0008487    .0007423
+                   Q5 (Richest)  |  -.0000367   .0005616    -0.07   0.948    -.0011374     .001064
+                                 |
+                           _cons |   3.084122   .0180353   171.00   0.000     3.048773     3.11947
+---
+
+ 
+. *******************************************************
+. * 2. Lấy hệ số γ_ii, β_i, λ_i từ SUR
+. *******************************************************
+. scalar gamma = _b[ln_P]       // γ_ii (own-price coefficient)
+
+. scalar beta  = _b[ln_x_P]     // β_i (expenditure coefficient)
+
+. scalar lambda = _b[ln_x_P_sq] // λ_i (quadratic expenditure coefficient)
+
+.
+. display "Gamma (price coefficient) = " gamma
+Gamma (price coefficient) = -.29411186
+
+. display "Beta (expenditure coefficient) = " beta
+Beta (expenditure coefficient) = -.00629116
+
+. display "Lambda (quadratic coefficient) = " lambda
+Lambda (quadratic coefficient) = .00006046
+
+.
+. *******************************************************
+. * 3. Lấy giá trị trung bình
+. *******************************************************
+. summarize w_elec
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+      w_elec |      9,362    .0472317    .0317452   .0001228   .3980892
+
+. scalar mean_w = r(mean)
+
+.
+. summarize ln_x_P
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+      ln_x_P |      9,362     8.22284    .6261345   5.129932   14.31221
+
+. scalar mean_lnx = r(mean)
+
+.
+. display "Mean budget share w_elec = " mean_w
+Mean budget share w_elec = .04723171
+
+. display "Mean ln(x/P) = " mean_lnx
+Mean ln(x/P) = 8.2228405
+
+.
+. *******************************************************
+. * 4. Tính toán elasticity theo QAIDS (công thức chuẩn)
+. *******************************************************
+.
+. * (1) Expenditure elasticity
+. scalar eta_exp = 1 + (beta + 2*lambda*mean_lnx)/mean_w
+
+.
+. * (2) Marshallian (uncompensated) own-price elasticity
+. scalar eta_marshall = (gamma + 2*lambda*mean_lnx)/mean_w - 1
+
+.
+. * (3) Hicksian (compensated) own-price elasticity
+. scalar eta_hicks = eta_marshall + mean_w*eta_exp
+
+.
+. *******************************************************
+. * 5. Hiển thị kết quả cuối
+. *******************************************************
+. display "-------------------------------------------"
+---
+
+. display " EXPENDITURE ELASTICITY (QAIDS) = " eta_exp
+ EXPENDITURE ELASTICITY (QAIDS) = .88785516
+
+. display " MARSHALLIAN OWN-PRICE ELASTICITY = " eta_marshall
+ MARSHALLIAN OWN-PRICE ELASTICITY = -7.2059466
+
+. display " HICKSIAN OWN-PRICE ELASTICITY    = " eta_hicks
+ HICKSIAN OWN-PRICE ELASTICITY    = -7.1640117
